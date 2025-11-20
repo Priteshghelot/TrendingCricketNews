@@ -32,16 +32,39 @@ export default function Live() {
 
         const fetchUpcomingMatches = async () => {
             try {
-                // Fetch from RSS feed to get all matches
                 const Parser = (await import('rss-parser')).default;
                 const parser = new Parser();
                 const feed = await parser.parseURL('https://static.cricinfo.com/rss/livescores.xml');
 
-                const matches: MatchPreview[] = feed.items.slice(0, 5).map(item => ({
-                    title: item.title || '',
-                    status: item.contentSnippet || '',
-                    isLive: (item.title || '').includes('*') || (item.contentSnippet || '').toLowerCase().includes('live')
-                }));
+                const matches: MatchPreview[] = feed.items.slice(0, 8).map(item => {
+                    const title = item.title || '';
+                    const description = item.contentSnippet || item.content || '';
+
+                    const isLive = title.includes('*') ||
+                        description.toLowerCase().includes('live') ||
+                        description.toLowerCase().includes('innings') ||
+                        description.toLowerCase().includes('overs');
+
+                    const cleanTitle = title.replace(/\*/g, '').trim();
+
+                    let status = description;
+                    if (description.toLowerCase().includes('scheduled') ||
+                        description.toLowerCase().includes('start') ||
+                        description.toLowerCase().includes('today') ||
+                        description.toLowerCase().includes('tomorrow')) {
+                        status = description;
+                    } else if (isLive) {
+                        status = '🔴 Live Now';
+                    } else if (description.length > 100) {
+                        status = description.substring(0, 100) + '...';
+                    }
+
+                    return {
+                        title: cleanTitle,
+                        status: status,
+                        isLive: isLive
+                    };
+                }).filter(match => match.title.length > 0);
 
                 setUpcomingMatches(matches);
             } catch (error) {
