@@ -52,6 +52,15 @@ export interface Score {
         recentBalls: string[];
         matchInfo: string;
     };
+    upcomingMatches?: MatchPreview[];
+}
+
+export interface MatchPreview {
+    title: string;
+    status: string;
+    isLive: boolean;
+    id?: string;
+    startTime?: string;
 }
 
 // In-memory fallback for Vercel/Serverless environments where FS is read-only

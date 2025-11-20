@@ -1,99 +1,62 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Score } from '@/lib/store';
+import { Score, MatchPreview } from '@/lib/store';
 import AdSense from '@/components/AdSense';
-
-interface MatchPreview {
-    title: string;
-    status: string;
-    isLive: boolean;
-}
 
 export default function Live() {
     const [score, setScore] = useState<Score | null>(null);
     const [upcomingMatches, setUpcomingMatches] = useState<MatchPreview[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
+
+    const fetchData = async (matchId?: string) => {
+        try {
+            const url = matchId ? `/api/scores?id=${encodeURIComponent(matchId)}` : '/api/scores';
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data && !data.error) {
+                setScore(data);
+                if (data.upcomingMatches) {
+                    setUpcomingMatches(data.upcomingMatches);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch data', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchScore = async () => {
-            try {
-                const res = await fetch('/api/scores');
-                const data = await res.json();
-                if (data && !data.error) {
-                    setScore(data.score || data);
-                }
-            } catch (error) {
-                console.error('Failed to fetch score', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        const fetchUpcomingMatches = async () => {
-            try {
-                const Parser = (await import('rss-parser')).default;
-                const parser = new Parser();
-                const feed = await parser.parseURL('https://static.cricinfo.com/rss/livescores.xml');
-
-                const matches: MatchPreview[] = feed.items.slice(0, 8).map(item => {
-                    const title = item.title || '';
-                    const description = item.contentSnippet || item.content || '';
-
-                    const isLive = title.includes('*') ||
-                        description.toLowerCase().includes('live') ||
-                        description.toLowerCase().includes('innings') ||
-                        description.toLowerCase().includes('overs');
-
-                    const cleanTitle = title.replace(/\*/g, '').trim();
-
-                    let status = description;
-                    if (description.toLowerCase().includes('scheduled') ||
-                        description.toLowerCase().includes('start') ||
-                        description.toLowerCase().includes('today') ||
-                        description.toLowerCase().includes('tomorrow')) {
-                        status = description;
-                    } else if (isLive) {
-                        status = '🔴 Live Now';
-                    } else if (description.length > 100) {
-                        status = description.substring(0, 100) + '...';
-                    }
-
-                    return {
-                        title: cleanTitle,
-                        status: status,
-                        isLive: isLive
-                    };
-                }).filter(match => match.title.length > 0);
-
-                setUpcomingMatches(matches);
-            } catch (error) {
-                console.error('Failed to fetch upcoming matches', error);
-            }
-        };
-
         // Initial fetch
-        fetchScore();
-        fetchUpcomingMatches();
+        fetchData(selectedMatchId || undefined);
 
-        // Auto-refresh every 10 seconds for live updates
-        const scoreInterval = setInterval(fetchScore, 10000);
-        const matchesInterval = setInterval(fetchUpcomingMatches, 30000); // Update match list every 30s
+        // Auto-refresh every 10 seconds
+        const interval = setInterval(() => {
+            fetchData(selectedMatchId || undefined);
+        }, 10000);
 
-        return () => {
-            clearInterval(scoreInterval);
-            clearInterval(matchesInterval);
-        };
-    }, []);
+        return () => clearInterval(interval);
+    }, [selectedMatchId]);
 
-    if (loading) return <div style={{ padding: '4rem', textAlign: 'center' }}>Loading live matches...</div>;
+    const handleMatchClick = (match: MatchPreview) => {
+        if (match.isLive && match.id) {
+            setSelectedMatchId(match.id);
+            setLoading(true);
+            // Immediate fetch for the new match
+            fetchData(match.id);
+        }
+    };
+
+    if (loading && !score) return <div style={{ padding: '4rem', textAlign: 'center' }}>Loading live matches...</div>;
 
     return (
         <div className="container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
                 {/* Main Live Score */}
                 <div>
-                    {score && Object.keys(score).length > 0 ? (
+                    {score && (score.status || score.matchTitle) ? (
                         <div className="card animate-fade-in" style={{ padding: '2rem', background: 'linear-gradient(145deg, #1e293b, #0f172a)', marginBottom: '2rem' }}>
                             {/* Series & Venue */}
                             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
@@ -148,6 +111,109 @@ export default function Live() {
                         </div>
                     )}
 
+                    {/* Detailed Scoreboard */}
+                    {score && score.detailedScore && (
+                        <div className="card animate-fade-in" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
+                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: '#e2e8f0', borderBottom: '1px solid #334155', paddingBottom: '0.5rem' }}>
+                                Detailed Scorecard
+                            </h3>
+
+                            {/* Partnership Info */}
+                            {score.detailedScore.partnership && (
+                                <div style={{
+                                    background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(14, 165, 233, 0.1))',
+                                    padding: '0.75rem 1rem',
+                                    borderRadius: '8px',
+                                    marginBottom: '1rem',
+                                    borderLeft: '3px solid var(--primary)'
+                                }}>
+                                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Current Partnership</div>
+                                    <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#e2e8f0' }}>{score.detailedScore.partnership}</div>
+                                </div>
+                            )}
+
+                            {/* Batting */}
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 1fr 1fr 1fr', gap: '0.5rem', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.5rem', padding: '0 0.5rem' }}>
+                                    <span>Batter</span>
+                                    <span style={{ textAlign: 'right' }}>R</span>
+                                    <span style={{ textAlign: 'right' }}>B</span>
+                                    <span style={{ textAlign: 'right' }}>4s</span>
+                                    <span style={{ textAlign: 'right' }}>6s</span>
+                                    <span style={{ textAlign: 'right' }}>SR</span>
+                                </div>
+                                {score.detailedScore.batters.map((batter, idx) => {
+                                    // First 2 batters are usually current players at crease
+                                    const isCurrentBatter = idx < 2 && !batter.name.includes('*') && batter.runs !== '0';
+                                    return (
+                                        <div key={idx} style={{
+                                            display: 'grid',
+                                            gridTemplateColumns: '3fr 1fr 1fr 1fr 1fr 1fr',
+                                            gap: '0.5rem',
+                                            fontSize: '0.9rem',
+                                            padding: '0.5rem',
+                                            background: isCurrentBatter ? 'rgba(56, 189, 248, 0.1)' : (idx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent'),
+                                            borderRadius: '4px',
+                                            borderLeft: isCurrentBatter ? '2px solid var(--primary)' : 'none',
+                                            position: 'relative'
+                                        }}>
+                                            <span style={{ color: '#e2e8f0', fontWeight: isCurrentBatter ? 'bold' : '500', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                {batter.name}
+                                                {isCurrentBatter && <span style={{ fontSize: '0.65rem', color: 'var(--primary)', background: 'rgba(56, 189, 248, 0.2)', padding: '2px 6px', borderRadius: '10px' }}>BATTING</span>}
+                                            </span>
+                                            <span style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--primary)' }}>{batter.runs}</span>
+                                            <span style={{ textAlign: 'right' }}>{batter.balls}</span>
+                                            <span style={{ textAlign: 'right' }}>{batter.fours}</span>
+                                            <span style={{ textAlign: 'right' }}>{batter.sixes}</span>
+                                            <span style={{ textAlign: 'right' }}>{batter.sr}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Bowling */}
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 1fr 1fr 1fr', gap: '0.5rem', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.5rem', padding: '0 0.5rem' }}>
+                                    <span>Bowler</span>
+                                    <span style={{ textAlign: 'right' }}>O</span>
+                                    <span style={{ textAlign: 'right' }}>M</span>
+                                    <span style={{ textAlign: 'right' }}>R</span>
+                                    <span style={{ textAlign: 'right' }}>W</span>
+                                    <span style={{ textAlign: 'right' }}>ECO</span>
+                                </div>
+                                {score.detailedScore.bowlers.map((bowler, idx) => (
+                                    <div key={idx} style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 1fr 1fr 1fr', gap: '0.5rem', fontSize: '0.9rem', padding: '0.5rem', background: idx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent', borderRadius: '4px' }}>
+                                        <span style={{ color: '#e2e8f0', fontWeight: '500' }}>{bowler.name}</span>
+                                        <span style={{ textAlign: 'right' }}>{bowler.overs}</span>
+                                        <span style={{ textAlign: 'right' }}>{bowler.maidens}</span>
+                                        <span style={{ textAlign: 'right' }}>{bowler.runs}</span>
+                                        <span style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--primary)' }}>{bowler.wickets}</span>
+                                        <span style={{ textAlign: 'right' }}>{bowler.economy}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Recent Balls */}
+                            {score.detailedScore.recentBalls.length > 0 && (
+                                <div>
+                                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.5rem' }}>Recent Balls</div>
+                                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                        {score.detailedScore.recentBalls.map((ball, idx) => (
+                                            <span key={idx} style={{
+                                                width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                borderRadius: '50%', fontSize: '0.75rem', fontWeight: 'bold',
+                                                background: ball.includes('W') ? '#ef4444' : (ball.includes('4') || ball.includes('6') ? 'var(--primary)' : '#334155'),
+                                                color: 'white'
+                                            }}>
+                                                {ball}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* Ad Below Live Scores */}
                     <AdSense
                         adSlot="1111111111"
@@ -168,12 +234,15 @@ export default function Live() {
                                 {upcomingMatches.map((match, index) => (
                                     <div
                                         key={index}
+                                        onClick={() => handleMatchClick(match)}
                                         style={{
                                             padding: '1rem',
-                                            background: match.isLive ? 'rgba(56, 189, 248, 0.1)' : 'rgba(255,255,255,0.03)',
+                                            background: selectedMatchId === match.id ? 'rgba(56, 189, 248, 0.2)' : (match.isLive ? 'rgba(56, 189, 248, 0.1)' : 'rgba(255,255,255,0.03)'),
                                             borderRadius: '8px',
                                             borderLeft: match.isLive ? '3px solid var(--primary)' : '3px solid #334155',
-                                            transition: 'all 0.3s'
+                                            cursor: match.isLive ? 'pointer' : 'default',
+                                            transition: 'all 0.3s',
+                                            transform: selectedMatchId === match.id ? 'scale(1.02)' : 'none'
                                         }}
                                     >
                                         {match.isLive && (
@@ -193,7 +262,7 @@ export default function Live() {
                                                     borderRadius: '50%',
                                                     animation: 'pulse 2s infinite'
                                                 }}></span>
-                                                LIVE NOW
+                                                {selectedMatchId === match.id ? 'WATCHING NOW' : 'LIVE NOW'}
                                             </span>
                                         )}
                                         <p style={{
@@ -216,7 +285,7 @@ export default function Live() {
 
                         <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #334155' }}>
                             <p style={{ fontSize: '0.75rem', color: '#64748b', textAlign: 'center' }}>
-                                Auto-updates every 10 seconds
+                                Click on a live match to view details
                             </p>
                         </div>
                     </div>

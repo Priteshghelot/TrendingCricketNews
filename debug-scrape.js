@@ -9,17 +9,11 @@ async function debugScrape() {
         console.log('Fetching RSS feed...');
         const feed = await parser.parseURL(RSS_URL);
 
-        // Log all titles to see what's available
-        console.log('Available Matches:');
-        feed.items.forEach((item, i) => console.log(`${i}: ${item.title}`));
-
-        // Use the same priority logic as the app
         const calculatePriority = (item) => {
             let score = 0;
             const title = (item.title || '').toLowerCase();
             const desc = (item.content || item.contentSnippet || '').toLowerCase();
             if (title.includes('*') || desc.includes('*') || desc.includes('live')) score += 100;
-            if (title.includes('women')) score += 5;
             return score;
         };
 
@@ -37,48 +31,61 @@ async function debugScrape() {
             return;
         }
 
-        console.log('Fetching match page...');
+        console.log('\nFetching match page...');
         const res = await fetch(match.link, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' }
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
         });
         const html = await res.text();
         const $ = cheerio.load(html);
 
-        // Test Selectors
-        console.log('\n--- Testing Selectors ---');
+        console.log('\n=== DEBUGGING DETAILED SCORE SCRAPING ===\n');
 
-        // Batters
-        const batters = [];
-        $('table.ci-scorecard-table tbody tr').each((i, el) => {
-            const tds = $(el).find('td');
-            if (tds.length >= 6) {
-                const name = $(tds[0]).text().trim();
-                if (name && !name.includes('Extras') && !name.includes('Total')) {
-                    batters.push(name);
-                }
+        // Test table scraping
+        console.log('--- All Tables ---');
+        $('table').each((tableIdx, table) => {
+            const headers = $(table).find('thead th, thead td').map((i, th) => $(th).text().trim()).get();
+            console.log(`Table ${tableIdx} Headers:`, headers);
+
+            // Check if it's a batting or bowling table
+            const isBatting = headers.some(h => h.toLowerCase().includes('batter') || h.toLowerCase().includes('batting'));
+            const isBowling = headers.some(h => h.toLowerCase().includes('bowler') || h.toLowerCase().includes('bowling'));
+
+            if (isBatting) {
+                console.log('>>> BATTING TABLE FOUND');
+                $(table).find('tbody tr').slice(0, 3).each((i, row) => {
+                    const tds = $(row).find('td');
+                    console.log(`  Row ${i} (${tds.length} cols):`, tds.map((j, td) => $(td).text().trim()).get());
+                });
+            }
+
+            if (isBowling) {
+                console.log('>>> BOWLING TABLE FOUND');
+                $(table).find('tbody tr').slice(0, 3).each((i, row) => {
+                    const tds = $(row).find('td');
+                    console.log(`  Row ${i} (${tds.length} cols):`, tds.map((j, td) => $(td).text().trim()).get());
+                });
             }
         });
-        console.log('Batters (ci-scorecard-table):', batters);
 
-        // Try alternative selector for batters (ds-table)
-        const battersAlt = [];
-        $('table.ds-table.ds-table-xs.ds-table-fixed.ci-scorecard-table tbody tr').each((i, el) => {
-            const tds = $(el).find('td');
-            const name = $(tds[0]).text().trim();
-            if (name) battersAlt.push(name);
+        // Test partnership
+        console.log('\n--- Partnership Info ---');
+        const partnership = $('*:contains("Partnership")').first();
+        if (partnership.length > 0) {
+            console.log('Found "Partnership" text:', partnership.text().trim().substring(0, 100));
+            console.log('Parent:', partnership.parent().text().trim().substring(0, 100));
+        } else {
+            console.log('No "Partnership" text found');
+        }
+
+        // Test recent balls
+        console.log('\n--- Recent Balls ---');
+        $('.match-commentary__run').each((i, el) => {
+            if (i < 6) console.log(`Ball ${i}:`, $(el).text().trim());
         });
-        console.log('Batters (ds-table):', battersAlt);
 
-        // Header Scores
-        const headerScores = [];
-        $('.ds-text-compact-m, .ds-text-ui-typo-mid').each((i, el) => {
-            headerScores.push($(el).text().trim());
-        });
-        console.log('Header Scores:', headerScores);
-
-        // Series Name
-        const seriesName = $('.ds-text-tight-m.ds-font-regular.ds-uppercase.ds-text-typo-mid3').first().text().trim();
-        console.log('Series Name:', seriesName);
+        // Alternative selector for recent balls
+        const recentBalls = $('[class*="ball"], [class*="run"], [class*="commentary"]').slice(0, 10);
+        console.log('Alternative ball elements found:', recentBalls.length);
 
     } catch (error) {
         console.error('Error:', error);

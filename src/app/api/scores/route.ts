@@ -1,28 +1,66 @@
 import { NextResponse } from 'next/server';
-import { getScore, updateScore, Score, Batsman, Bowler } from '@/lib/store';
+import { Score, Batsman, Bowler, MatchPreview } from '@/lib/store';
 import Parser from 'rss-parser';
 import * as cheerio from 'cheerio';
 
 const parser = new Parser();
 const RSS_URL = 'https://static.cricinfo.com/rss/livescores.xml';
 
-export async function GET() {
+// Simple in-memory cache
+let cache: {
+    data: Score | null;
+    timestamp: number;
+} = {
+    data: null,
+    timestamp: 0
+};
+
+const CACHE_DURATION = 30 * 1000; // 30 seconds
+
+export async function GET(request: Request) {
     try {
+        const { searchParams } = new URL(request.url);
+        const requestedId = searchParams.get('id');
+
+        // Check cache (skip if specific ID requested to ensure fresh data for switch)
+        if (!requestedId && cache.data && (Date.now() - cache.timestamp < CACHE_DURATION)) {
+            return NextResponse.json(cache.data);
+        }
+
         const feed = await parser.parseURL(RSS_URL);
 
         const calculatePriority = (item: any) => {
             let score = 0;
             const title = (item.title || '').toLowerCase();
             const desc = (item.content || item.contentSnippet || '').toLowerCase();
+            const guid = item.guid || item.link || title;
 
-            if (title.includes('*') || desc.includes('*') || desc.includes('live')) score += 100;
-            if (title.includes('world cup') || title.includes('t20 world cup')) score += 50;
-            if (title.includes('test') || title.includes('odi') || title.includes('t20i')) score += 20;
-            const majorTeams = ['india', 'australia', 'england', 'pakistan', 'south africa'];
-            if (majorTeams.some(t => title.includes(t))) score += 10;
-            if (title.includes('ipl') || title.includes('bbl') || title.includes('psl')) score += 15;
-            if (title.includes('women')) score += 5;
-            if (desc.includes('won by') || desc.includes('match ended')) score -= 50;
+            // 1. User Selection Override (Highest Priority)
+            if (requestedId && (guid === requestedId || item.link === requestedId)) {
+                return 10000;
+            }
+
+            // 2. Live Status
+            if (title.includes('*') || desc.includes('*') || desc.includes('live')) score += 500;
+
+            // 3. Team Popularity (India is top priority for this user)
+            if (title.includes('india')) score += 200;
+            const majorTeams = ['australia', 'england', 'pakistan', 'south africa', 'new zealand'];
+            if (majorTeams.some(t => title.includes(t))) score += 50;
+
+            // 4. Tournament/Series Importance
+            if (title.includes('world cup')) score += 100;
+            if (title.includes('final')) score += 75;
+            if (title.includes('semi-final')) score += 60;
+            if (title.includes('ipl') || title.includes('bbl') || title.includes('psl')) score += 40;
+
+            // 5. Format Preference
+            if (title.includes('t20')) score += 30;
+            if (title.includes('odi')) score += 20;
+            if (title.includes('test')) score += 10;
+
+            // 6. Negative Weights (Finished matches)
+            if (desc.includes('won by') || desc.includes('match ended')) score -= 1000;
 
             return score;
         };
@@ -32,6 +70,7 @@ export async function GET() {
             priority: calculatePriority(item)
         })).sort((a, b) => b.priority - a.priority);
 
+        // 1. Process Live Match (Top Priority)
         let match = sortedMatches.length > 0 ? sortedMatches[0].item : feed.items[0];
         const title = match.title || '';
         const description = match.content || match.contentSnippet || '';
@@ -79,81 +118,100 @@ export async function GET() {
                     const html = await res.text();
                     const $ = cheerio.load(html);
 
-                    // Find ALL tables and analyze them
-                    console.log('=== ANALYZING TABLES ===');
+
                     $('table').each((tableIdx, table) => {
                         const headers = $(table).find('thead th, thead td').map((i, th) => $(th).text().trim()).get();
-                        console.log(`Table ${tableIdx} headers:`, headers);
 
-                        // Check if this is a batting table
-                        if (headers.some(h => h.toLowerCase() === 'batter' || h.toLowerCase() === 'batting')) {
-                            console.log('Found batting table at index', tableIdx);
+                        // Check if this is the combined batting/bowling table
+                        const hasBatters = headers.some(h => h.toLowerCase() === 'batters');
+                        const hasBowlers = headers.some(h => h.toLowerCase() === 'bowlers');
 
-                            $(table).find('tbody tr').slice(0, 3).each((rowIdx, row) => {
-                                const cells = $(row).find('td').map((i, td) => $(td).text().trim()).get();
-                                console.log(`  Row ${rowIdx}:`, cells);
-                            });
-
-                            // Scrape batters with correct indices
+                        if (hasBatters && hasBowlers) {
+                            // This is the combined table - batters and bowlers are in the same table
                             $(table).find('tbody tr').each((i, row) => {
                                 const tds = $(row).find('td');
-                                if (tds.length >= 7) {
-                                    const name = $(tds[0]).text().trim();
-                                    const dismissal = $(tds[1]).text().trim();
-                                    const runs = $(tds[2]).text().trim();
-                                    const balls = $(tds[3]).text().trim();
-                                    const fours = $(tds[5]).text().trim();
-                                    const sixes = $(tds[6]).text().trim();
-                                    const sr = $(tds[7]).text().trim();
 
-                                    if (name && !name.includes('Extras') && !name.includes('Total') && !name.includes('Did not bat') && !isNaN(Number(runs))) {
+                                // Batters have 8 columns, bowlers have 10 columns
+                                if (tds.length === 8) {
+                                    // This is a batter row
+                                    const name = $(tds[0]).text().trim();
+                                    const runs = $(tds[1]).text().trim();
+                                    const balls = $(tds[2]).text().trim();
+                                    const fours = $(tds[3]).text().trim();
+                                    const sixes = $(tds[4]).text().trim();
+                                    const sr = $(tds[5]).text().trim();
+
+                                    if (name && !name.includes('Extras') && !name.includes('Total') && !isNaN(Number(runs))) {
                                         detailedScore.batters.push({ name, runs, balls, fours, sixes, sr });
                                     }
-                                }
-                            });
-                        }
-
-                        // Check if this is a bowling table
-                        if (headers.some(h => h.toLowerCase() === 'bowler' || h.toLowerCase() === 'bowling')) {
-                            console.log('Found bowling table at index', tableIdx);
-
-                            $(table).find('tbody tr').slice(0, 3).each((rowIdx, row) => {
-                                const cells = $(row).find('td').map((i, td) => $(td).text().trim()).get();
-                                console.log(`  Row ${rowIdx}:`, cells);
-                            });
-
-                            // Scrape bowlers
-                            $(table).find('tbody tr').each((i, row) => {
-                                const tds = $(row).find('td');
-                                if (tds.length >= 6) {
+                                } else if (tds.length >= 10) {
+                                    // This is a bowler row
                                     const name = $(tds[0]).text().trim();
                                     const overs = $(tds[1]).text().trim();
+                                    const maidens = $(tds[2]).text().trim();
+                                    const runs = $(tds[3]).text().trim();
+                                    const wickets = $(tds[4]).text().trim();
+                                    const economy = $(tds[5]).text().trim();
 
                                     if (name && (overs.includes('.') || !isNaN(Number(overs))) && name !== 'Total') {
                                         detailedScore.bowlers.push({
                                             name,
                                             overs,
-                                            maidens: $(tds[2]).text().trim(),
-                                            runs: $(tds[3]).text().trim(),
-                                            wickets: $(tds[4]).text().trim(),
-                                            economy: $(tds[5]).text().trim(),
-                                            extras: $(tds[7])?.text().trim() || '0'
+                                            maidens,
+                                            runs,
+                                            wickets,
+                                            economy
                                         });
                                     }
                                 }
                             });
+                        } else {
+                            // Fallback: separate batting/bowling tables
+                            if (headers.some(h => h.toLowerCase().includes('batter') || h.toLowerCase().includes('batting'))) {
+                                $(table).find('tbody tr').each((i, row) => {
+                                    const tds = $(row).find('td');
+                                    if (tds.length >= 6) {
+                                        const name = $(tds[0]).text().trim();
+                                        const runs = $(tds[1] || tds[2]).text().trim();
+                                        const balls = $(tds[2] || tds[3]).text().trim();
+                                        const fours = $(tds[3] || tds[4]).text().trim();
+                                        const sixes = $(tds[4] || tds[5]).text().trim();
+                                        const sr = $(tds[5] || tds[6]).text().trim();
+
+                                        if (name && !name.includes('Extras') && !name.includes('Total') && !isNaN(Number(runs))) {
+                                            detailedScore.batters.push({ name, runs, balls, fours, sixes, sr });
+                                        }
+                                    }
+                                });
+                            }
+
+                            if (headers.some(h => h.toLowerCase().includes('bowler') || h.toLowerCase().includes('bowling'))) {
+                                $(table).find('tbody tr').each((i, row) => {
+                                    const tds = $(row).find('td');
+                                    if (tds.length >= 6) {
+                                        const name = $(tds[0]).text().trim();
+                                        const overs = $(tds[1]).text().trim();
+
+                                        if (name && (overs.includes('.') || !isNaN(Number(overs))) && name !== 'Total') {
+                                            detailedScore.bowlers.push({
+                                                name,
+                                                overs,
+                                                maidens: $(tds[2]).text().trim(),
+                                                runs: $(tds[3]).text().trim(),
+                                                wickets: $(tds[4]).text().trim(),
+                                                economy: $(tds[5]).text().trim()
+                                            });
+                                        }
+                                    }
+                                });
+                            }
                         }
                     });
 
-                    // Limit to active players
-                    if (detailedScore.batters.length > 2) {
-                        detailedScore.batters = detailedScore.batters.slice(-2);
-                    }
-                    if (detailedScore.bowlers.length > 0) {
-                        detailedScore.bowlers = detailedScore.bowlers.slice(-2);
-                    }
+                    // Keep only current batters (last 2) and current bowlers (last 2)
+                    if (detailedScore.batters.length > 2) detailedScore.batters = detailedScore.batters.slice(-2);
+                    if (detailedScore.bowlers.length > 2) detailedScore.bowlers = detailedScore.bowlers.slice(-2);
 
-                    // Scrape match details
                     const seriesName = $('.ds-text-tight-m.ds-font-regular.ds-uppercase.ds-text-typo-mid3').first().text().trim();
                     const matchLocation = $('.ds-text-tight-m.ds-font-regular.ds-text-typo-mid3').first().text().trim();
                     const equation = $('.ds-text-tight-s.ds-font-medium.ds-truncate.ds-text-typo').text().trim();
@@ -163,7 +221,6 @@ export async function GET() {
                     detailedScore.equation = equation;
                     if (seriesName) detailedScore.matchInfo = seriesName;
 
-                    // Scrape recent balls
                     $('.match-commentary__run').each((i, el) => {
                         if (i < 6) {
                             const run = $(el).text().trim();
@@ -179,6 +236,39 @@ export async function GET() {
         const currentBatters = detailedScore.batters.map(b => b.name);
         const currentBowlers = detailedScore.bowlers.map(b => b.name);
 
+        // 2. Process Upcoming Matches
+        const upcomingMatches: MatchPreview[] = feed.items.slice(0, 15).map(item => {
+            const title = item.title || '';
+            const description = item.contentSnippet || item.content || '';
+
+            const isLive = title.includes('*') ||
+                description.toLowerCase().includes('live') ||
+                description.toLowerCase().includes('innings') ||
+                description.toLowerCase().includes('overs');
+
+            const cleanTitle = title.replace(/\*/g, '').trim();
+
+            let status = description;
+            if (description.toLowerCase().includes('scheduled') ||
+                description.toLowerCase().includes('start') ||
+                description.toLowerCase().includes('today') ||
+                description.toLowerCase().includes('tomorrow')) {
+                status = description;
+            } else if (isLive) {
+                status = '🔴 Live Now';
+            } else if (description.length > 100) {
+                status = description.substring(0, 100) + '...';
+            }
+
+            return {
+                title: cleanTitle,
+                status: status,
+                isLive: isLive,
+                id: item.guid || item.link || title
+            };
+        }).filter(match => match.title.length > 0);
+
+
         const autoScore: Score = {
             teamA,
             teamB,
@@ -190,7 +280,14 @@ export async function GET() {
             matchLocation: detailedScore.matchLocation || '',
             equation: detailedScore.equation || description,
             commentary: await scrapeRealCommentary(match.link || '', currentBatters, currentBowlers),
-            detailedScore
+            detailedScore,
+            upcomingMatches
+        };
+
+        // Update cache
+        cache = {
+            data: autoScore,
+            timestamp: Date.now()
         };
 
         return NextResponse.json(autoScore);
@@ -218,8 +315,6 @@ async function scrapeRealCommentary(matchUrl: string, batters: string[], bowlers
         const $ = cheerio.load(html);
         const commentary: { ball: string; text: string; run: string }[] = [];
 
-        console.log('=== SCRAPING COMMENTARY ===');
-
         // Strategy 1: Look for commentary items with specific ESPN classes
         $('div[class*="Commentry"]').each((i, el) => {
             if (i < 10) {
@@ -227,8 +322,6 @@ async function scrapeRealCommentary(matchUrl: string, batters: string[], bowlers
                 const fullText = $(el).text().trim();
                 const runValue = $(el).find('span[class*="run"]').text().trim() ||
                     $(el).find('.ds-w-8').text().trim() || '0';
-
-                console.log(`Commentary ${i}:`, { ballText, fullText: fullText.substring(0, 100), runValue });
 
                 if (ballText && fullText) {
                     commentary.push({
@@ -259,31 +352,27 @@ async function scrapeRealCommentary(matchUrl: string, batters: string[], bowlers
             });
         }
 
-        // Strategy 3: Look for any divs with ball notation pattern (e.g., "6.3", "12.5")
+        // Strategy 3: Look for any divs with ball notation pattern
         if (commentary.length === 0) {
             $('div').each((i, el) => {
                 const text = $(el).text().trim();
-                const ballMatch = text.match(/^(\d+\.\d+)/); // Matches "6.3", "12.5", etc.
+                const ballMatch = text.match(/^(\d+\.\d+)/);
 
                 if (ballMatch && commentary.length < 10) {
                     const ball = ballMatch[1];
                     const restOfText = text.substring(ball.length).trim();
-
-                    // Extract run value if present
                     const runMatch = restOfText.match(/(no run|FOUR|SIX|WICKET|W|\d+ runs?)/i);
                     const run = runMatch ? runMatch[0] : '0';
 
-                    if (restOfText.length > 10) { // Ensure there's actual commentary
+                    if (restOfText.length > 10) {
                         commentary.push({ ball, text: restOfText, run });
                     }
                 }
             });
         }
 
-        console.log(`Found ${commentary.length} commentary items`);
-
         if (commentary.length > 0) {
-            return commentary.slice(0, 10); // Return max 10 items
+            return commentary.slice(0, 10);
         }
 
         return generateSimulatedCommentary(batters, bowlers);
@@ -303,9 +392,8 @@ export async function POST(request: Request) {
 }
 
 function generateSimulatedCommentary(batters: string[], bowlers: string[]) {
-    // Generate dynamic over number based on current time to simulate progression
     const currentMinute = new Date().getMinutes();
-    const baseOver = Math.floor(currentMinute / 3); // Changes every 3 minutes
+    const baseOver = Math.floor(currentMinute / 3);
 
     const outcomes = ['1 run', 'No run', 'FOUR', 'SIX', 'WICKET', '2 runs'];
     const bowler = bowlers[0] || 'Bowler';
@@ -315,7 +403,7 @@ function generateSimulatedCommentary(batters: string[], bowlers: string[]) {
     for (let i = 0; i < 6; i++) {
         const outcome = outcomes[Math.floor(Math.random() * outcomes.length)];
         commentary.push({
-            ball: `${baseOver}.${i + 1}`,  // Dynamic over number
+            ball: `${baseOver}.${i + 1}`,
             text: `${bowler} to ${batter}, ${outcome.toLowerCase()}`,
             run: outcome
         });

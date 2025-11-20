@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface AdSenseProps {
     adSlot: string;
@@ -15,7 +15,12 @@ export default function AdSense({
     fullWidthResponsive = true,
     style = { display: 'block' }
 }: AdSenseProps) {
+    const adRequested = useRef(false);
+
     useEffect(() => {
+        if (adRequested.current) return;
+        adRequested.current = true;
+
         try {
             // @ts-ignore
             (window.adsbygoogle = window.adsbygoogle || []).push({});
