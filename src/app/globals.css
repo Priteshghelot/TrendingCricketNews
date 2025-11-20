@@ -22,6 +22,11 @@
   margin: 0;
 }
 
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
 html,
 body {
   max-width: 100vw;
@@ -30,6 +35,9 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  position: relative;
 }
 
 a {
@@ -42,6 +50,7 @@ a {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  width: 100%;
 }
 
 .btn {
@@ -234,5 +243,96 @@ a {
 
   100% {
     opacity: 1;
+  }
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+
+  .container {
+    padding: 1rem;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .card {
+    border-radius: 0.75rem;
+  }
+
+  /* Modal adjustments for mobile */
+  .modal-overlay {
+    padding: 1rem;
+    align-items: flex-start;
+    padding-top: 2rem;
+  }
+
+  .modal-content {
+    max-height: 85vh;
+    border-radius: 0.75rem;
+  }
+
+  .close-btn {
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+  }
+
+  /* Scoreboard responsive */
+  .scoreboard {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 13px;
+  }
+
+  .container {
+    padding: 0.75rem;
+  }
+
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .grid {
+    gap: 0.75rem;
+  }
+}
+
+/* Desktop-specific styles for live page */
+@media (min-width: 1024px) {
+  .live-grid {
+    grid-template-columns: 2fr 1fr !important;
+    gap: 2rem !important;
+  }
+
+  .upcoming-sidebar .card {
+    position: sticky;
+    top: 100px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .live-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+}
+
+/* Hide desktop nav on mobile */
+@media (max-width: 768px) {
+  .desktop-nav {
+    display: none !important;
   }
 }

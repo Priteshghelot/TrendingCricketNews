@@ -208,6 +208,8 @@ export async function GET(request: Request) {
                         }
                     });
 
+
+
                     // Keep only current batters (last 2) and current bowlers (last 2)
                     if (detailedScore.batters.length > 2) detailedScore.batters = detailedScore.batters.slice(-2);
                     if (detailedScore.bowlers.length > 2) detailedScore.bowlers = detailedScore.bowlers.slice(-2);

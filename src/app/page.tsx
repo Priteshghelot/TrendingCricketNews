@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdSense from '@/components/AdSense';
 
 interface Post {
@@ -35,25 +35,33 @@ export default function Home() {
     // Initial fetch
     fetchPosts();
 
-    // Auto-refresh every 30 seconds to show newly approved posts
-    const interval = setInterval(fetchPosts, 30000);
+    // Auto-refresh every 10 seconds to show newly approved posts
+    const interval = setInterval(fetchPosts, 10000);
 
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="container">
-      <header style={{ textAlign: 'center', margin: '3rem 0' }}>
-        <h1 style={{ fontSize: '3rem', marginBottom: '0.5rem', letterSpacing: '-0.05em' }}>
+      <header style={{ textAlign: 'center', margin: '2rem 0 1.5rem' }}>
+        <h1 style={{
+          fontSize: 'clamp(2rem, 5vw, 3rem)',
+          marginBottom: '0.5rem',
+          letterSpacing: '-0.05em',
+          lineHeight: 1.2
+        }}>
           Latest <span style={{ color: 'var(--primary)' }}>Cricket News</span>
         </h1>
-        <p style={{ color: '#94a3b8', fontSize: '1.1rem' }}>Match reports, highlights, and trending stories.</p>
+        <p style={{ color: '#94a3b8', fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', padding: '0 1rem' }}>Match reports, highlights, and trending stories.</p>
 
         {/* Manual Refresh Button */}
         <button
           onClick={async () => {
             setLoading(true);
             try {
+              // First trigger a fresh fetch from RSS
+              await fetch('/api/cron/news');
+              // Then get the updated list
               const res = await fetch('/api/posts?status=approved');
               const data = await res.json();
               setPosts(data.posts);
@@ -63,22 +71,25 @@ export default function Home() {
               setLoading(false);
             }
           }}
+          className="btn"
           style={{
             marginTop: '1rem',
-            padding: '0.5rem 1.5rem',
+            padding: 'clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem)',
             background: 'var(--primary)',
             color: 'white',
             border: 'none',
             borderRadius: '8px',
             cursor: 'pointer',
-            fontSize: '0.9rem',
+            fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
             fontWeight: '600',
-            transition: 'all 0.3s'
+            transition: 'all 0.3s',
+            opacity: loading ? 0.7 : 1
           }}
-          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          disabled={loading}
+          onMouseOver={(e) => !loading && (e.currentTarget.style.transform = 'scale(1.05)')}
+          onMouseOut={(e) => !loading && (e.currentTarget.style.transform = 'scale(1)')}
         >
-          🔄 Refresh News
+          {loading ? '🔄 Refreshing...' : '🔄 Refresh News'}
         </button>
       </header>
 
@@ -102,15 +113,14 @@ export default function Home() {
           {posts
             .filter(post => Date.now() - post.timestamp < 2 * 24 * 60 * 60 * 1000) // Filter < 48 hours
             .map((post, index) => (
-              <>
+              <React.Fragment key={post.id}>
                 <div
-                  key={post.id}
                   className="card animate-fade-in"
                   style={{ animationDelay: `${index * 0.1}s`, cursor: 'pointer', display: 'block', textDecoration: 'none', color: 'inherit' }}
                   onClick={() => setSelectedPost(post)}
                 >
                   {post.imageUrl && (
-                    <div style={{ height: '250px', overflow: 'hidden' }}>
+                    <div style={{ height: 'clamp(180px, 35vw, 250px)', overflow: 'hidden' }}>
                       <img
                         src={post.imageUrl}
                         alt="Trend"
@@ -119,11 +129,11 @@ export default function Home() {
                       />
                     </div>
                   )}
-                  <div style={{ padding: '2rem' }}>
-                    <p style={{ fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '1.5rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  <div style={{ padding: 'clamp(1rem, 3vw, 2rem)' }}>
+                    <p style={{ fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', lineHeight: '1.6', marginBottom: '1rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                       {post.content}
                     </p>
-                    <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                    <span style={{ fontSize: 'clamp(0.75rem, 1.5vw, 0.85rem)', color: '#64748b' }}>
                       {new Date(post.timestamp).toLocaleDateString()}
                     </span>
                   </div>
@@ -131,7 +141,7 @@ export default function Home() {
 
                 {/* In-Content Ad - Show after every 4 articles */}
                 {(index + 1) % 4 === 0 && index !== posts.filter(p => Date.now() - p.timestamp < 2 * 24 * 60 * 60 * 1000).length - 1 && (
-                  <div key={`ad-${index}`} className="card" style={{ gridColumn: '1 / -1', padding: '2rem', background: 'rgba(255,255,255,0.02)' }}>
+                  <div className="card" style={{ gridColumn: '1 / -1', padding: '2rem', background: 'rgba(255,255,255,0.02)' }}>
                     <AdSense
                       adSlot="0987654321"
                       adFormat="rectangle"
@@ -139,7 +149,7 @@ export default function Home() {
                     />
                   </div>
                 )}
-              </>
+              </React.Fragment>
             ))}
         </div>
       )}
@@ -151,7 +161,7 @@ export default function Home() {
             <button className="close-btn" onClick={() => setSelectedPost(null)}>×</button>
 
             {selectedPost.imageUrl && (
-              <div style={{ width: '100%', height: '400px', overflow: 'hidden' }}>
+              <div style={{ width: '100%', height: 'clamp(250px, 40vh, 400px)', overflow: 'hidden' }}>
                 <img
                   src={selectedPost.imageUrl}
                   alt="Trend"
@@ -160,8 +170,8 @@ export default function Home() {
               </div>
             )}
 
-            <div style={{ padding: '2.5rem' }}>
-              <h2 style={{ fontSize: '2rem', marginBottom: '1.5rem', lineHeight: '1.3' }}>
+            <div style={{ padding: 'clamp(1.5rem, 4vw, 2.5rem)' }}>
+              <h2 style={{ fontSize: 'clamp(1.3rem, 4vw, 2rem)', marginBottom: '1.5rem', lineHeight: '1.3' }}>
                 {selectedPost.content}
               </h2>
 
@@ -182,7 +192,7 @@ export default function Home() {
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: '2rem', color: '#888', marginBottom: '2rem', alignItems: 'center' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(1rem, 3vw, 2rem)', color: '#888', marginBottom: '2rem', alignItems: 'center', fontSize: 'clamp(0.8rem, 2vw, 1rem)' }}>
                 <span>{new Date(selectedPost.timestamp).toLocaleString()}</span>
                 {selectedPost.sourceUrl && (
                   <a
@@ -196,7 +206,7 @@ export default function Home() {
                 )}
               </div>
 
-              <p style={{ fontSize: '1.1rem', lineHeight: '1.8', color: '#ccc' }}>
+              <p style={{ fontSize: 'clamp(0.95rem, 2.5vw, 1.1rem)', lineHeight: '1.8', color: '#ccc' }}>
                 {/* Since we only have the title/snippet from RSS, we display it here. 
                     In a real app, we might fetch the full body content. */}
                 {selectedPost.content}

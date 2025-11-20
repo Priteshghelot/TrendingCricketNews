@@ -1,6 +1,7 @@
 import './globals.css';
 import Link from 'next/link';
 import { Outfit } from 'next/font/google';
+import MobileNav from '@/components/MobileNav';
 
 const outfit = Outfit({ subsets: ['latin'] });
 
@@ -17,6 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
         {/* Google AdSense */}
         <script
           async
@@ -30,17 +32,19 @@ export default function RootLayout({
           padding: '1rem 0',
           position: 'sticky',
           top: 0,
-          background: 'rgba(15, 23, 42, 0.8)',
+          background: 'rgba(15, 23, 42, 0.95)',
           backdropFilter: 'blur(10px)',
           zIndex: 100
         }}>
-          <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 2rem' }}>
+          <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 1.5rem' }}>
             <Link href="/" style={{ fontSize: '1.5rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span style={{ color: 'var(--primary)' }}>Cric</span>
               <span style={{ color: 'white' }}>Trend</span>
             </Link>
-            <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-              <Link href="/" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.3s' }}>
+
+            {/* Desktop Navigation */}
+            <nav className="desktop-nav" style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+              <Link href="/" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.3s', fontWeight: '500' }}>
                 Home
               </Link>
               <Link
@@ -51,7 +55,8 @@ export default function RootLayout({
                   transition: 'color 0.3s',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem'
+                  gap: '0.5rem',
+                  fontWeight: '500'
                 }}
               >
                 <span style={{
@@ -63,10 +68,13 @@ export default function RootLayout({
                 }}></span>
                 Live
               </Link>
-              <Link href="/archive" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.3s' }}>
+              <Link href="/archive" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.3s', fontWeight: '500' }}>
                 Archive
               </Link>
             </nav>
+
+            {/* Mobile Navigation */}
+            <MobileNav />
           </div>
         </nav>
         <main style={{ minHeight: 'calc(100vh - 80px)' }}>

@@ -23,14 +23,16 @@ export async function GET() {
             if (!isDuplicate && item.title && item.link) {
                 console.log(`Found new article: ${item.title}`);
 
-                // Scrape for image
+                // Scrape for image with multiple fallbacks
                 let imageUrl = '/images/default-news.jpg'; // Default fallback
                 try {
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 5000);
                     const res = await fetch(item.link, {
                         signal: controller.signal,
-                        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                        }
                     });
                     clearTimeout(timeoutId);
 
@@ -38,15 +40,22 @@ export async function GET() {
                         const html = await res.text();
                         const $ = cheerio.load(html);
 
-                        // Try og:image
+                        // Try multiple image sources in order of preference
                         const ogImage = $('meta[property="og:image"]').attr('content');
-                        if (ogImage) {
-                            imageUrl = ogImage;
-                        } else {
-                            // Try twitter:image
-                            const twitterImage = $('meta[name="twitter:image"]').attr('content');
-                            if (twitterImage) imageUrl = twitterImage;
+                        const twitterImage = $('meta[name="twitter:image"]').attr('content') || $('meta[property="twitter:image"]').attr('content');
+                        const articleImage = $('article img').first().attr('src');
+                        const firstImage = $('img[src]').first().attr('src');
+
+                        // Use the first available image
+                        imageUrl = ogImage || twitterImage || articleImage || firstImage || imageUrl;
+
+                        // Ensure absolute URL
+                        if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+                            const baseUrl = new URL(item.link);
+                            imageUrl = new URL(imageUrl, baseUrl.origin).href;
                         }
+
+                        console.log(`Image found for ${item.title}: ${imageUrl}`);
                     }
                 } catch (e) {
                     console.warn(`Failed to scrape image for ${item.link}:`, e);

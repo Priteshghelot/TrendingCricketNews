@@ -50,6 +50,8 @@ export default function ArchivePage() {
                 />
             </div>
 
+
+
             {loading ? (
                 <div style={{ textAlign: 'center', padding: '4rem' }}>Loading archive...</div>
             ) : posts.filter(p => Date.now() - p.timestamp >= 2 * 24 * 60 * 60 * 1000).length === 0 ? (
