@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import AdSense from '@/components/AdSense';
 
 interface Post {
   id: string;
@@ -43,6 +44,15 @@ export default function Home() {
         <p style={{ color: '#94a3b8', fontSize: '1.1rem' }}>Match reports, highlights, and trending stories.</p>
       </header>
 
+      {/* Top Banner Ad */}
+      <div style={{ maxWidth: '970px', margin: '0 auto 2rem' }}>
+        <AdSense
+          adSlot="1234567890"
+          adFormat="horizontal"
+          style={{ display: 'block', textAlign: 'center', marginBottom: '2rem' }}
+        />
+      </div>
+
       {loading ? (
         <div style={{ textAlign: 'center', padding: '4rem' }}>Loading trends...</div>
       ) : posts.filter(p => Date.now() - p.timestamp < 2 * 24 * 60 * 60 * 1000).length === 0 ? (
@@ -54,31 +64,44 @@ export default function Home() {
           {posts
             .filter(post => Date.now() - post.timestamp < 2 * 24 * 60 * 60 * 1000) // Filter < 48 hours
             .map((post, index) => (
-              <div
-                key={post.id}
-                className="card animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s`, cursor: 'pointer', display: 'block', textDecoration: 'none', color: 'inherit' }}
-                onClick={() => setSelectedPost(post)}
-              >
-                {post.imageUrl && (
-                  <div style={{ height: '250px', overflow: 'hidden' }}>
-                    <img
-                      src={post.imageUrl}
-                      alt="Trend"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
-                      className="post-image"
+              <>
+                <div
+                  key={post.id}
+                  className="card animate-fade-in"
+                  style={{ animationDelay: `${index * 0.1}s`, cursor: 'pointer', display: 'block', textDecoration: 'none', color: 'inherit' }}
+                  onClick={() => setSelectedPost(post)}
+                >
+                  {post.imageUrl && (
+                    <div style={{ height: '250px', overflow: 'hidden' }}>
+                      <img
+                        src={post.imageUrl}
+                        alt="Trend"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                        className="post-image"
+                      />
+                    </div>
+                  )}
+                  <div style={{ padding: '2rem' }}>
+                    <p style={{ fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '1.5rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {post.content}
+                    </p>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      {new Date(post.timestamp).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+
+                {/* In-Content Ad - Show after every 4 articles */}
+                {(index + 1) % 4 === 0 && index !== posts.filter(p => Date.now() - p.timestamp < 2 * 24 * 60 * 60 * 1000).length - 1 && (
+                  <div key={`ad-${index}`} className="card" style={{ gridColumn: '1 / -1', padding: '2rem', background: 'rgba(255,255,255,0.02)' }}>
+                    <AdSense
+                      adSlot="0987654321"
+                      adFormat="rectangle"
+                      style={{ display: 'block', textAlign: 'center' }}
                     />
                   </div>
                 )}
-                <div style={{ padding: '2rem' }}>
-                  <p style={{ fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '1.5rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                    {post.content}
-                  </p>
-                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                    {new Date(post.timestamp).toLocaleDateString()}
-                  </span>
-                </div>
-              </div>
+              </>
             ))}
         </div>
       )}

@@ -16,6 +16,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Google AdSense */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3583801342408600"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className={outfit.className}>
         <nav style={{
           borderBottom: '1px solid var(--card-border)',

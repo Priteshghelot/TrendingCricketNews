@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { Score } from '@/lib/store';
+import AdSense from '@/components/AdSense';
 
 export default function Live() {
     const [score, setScore] = useState<Score | null>(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'live' | 'scorecard' | 'info'>('scorecard');
 
     useEffect(() => {
         const fetchScore = async () => {
@@ -79,6 +79,15 @@ export default function Live() {
                         {score.equation || score.status}
                     </p>
                 </div>
+            </div>
+
+            {/* Ad Below Live Scores */}
+            <div style={{ marginTop: '2rem' }}>
+                <AdSense
+                    adSlot="1111111111"
+                    adFormat="rectangle"
+                    style={{ display: 'block', textAlign: 'center' }}
+                />
             </div>
         </div>
     );

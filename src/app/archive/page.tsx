@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import AdSense from '@/components/AdSense';
 
 interface Post {
     id: string;
@@ -39,6 +40,15 @@ export default function ArchivePage() {
                 <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Archive</h1>
                 <p style={{ color: '#888' }}>Yesterday's news.</p>
             </header>
+
+            {/* Top Banner Ad */}
+            <div style={{ maxWidth: '970px', margin: '0 auto 2rem' }}>
+                <AdSense
+                    adSlot="2222222222"
+                    adFormat="horizontal"
+                    style={{ display: 'block', textAlign: 'center', marginBottom: '2rem' }}
+                />
+            </div>
 
             {loading ? (
                 <div style={{ textAlign: 'center', padding: '4rem' }}>Loading archive...</div>
