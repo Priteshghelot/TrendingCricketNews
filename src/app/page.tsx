@@ -32,7 +32,13 @@ export default function Home() {
       }
     };
 
+    // Initial fetch
     fetchPosts();
+
+    // Auto-refresh every 30 seconds to show newly approved posts
+    const interval = setInterval(fetchPosts, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -42,6 +48,38 @@ export default function Home() {
           Latest <span style={{ color: 'var(--primary)' }}>Cricket News</span>
         </h1>
         <p style={{ color: '#94a3b8', fontSize: '1.1rem' }}>Match reports, highlights, and trending stories.</p>
+
+        {/* Manual Refresh Button */}
+        <button
+          onClick={async () => {
+            setLoading(true);
+            try {
+              const res = await fetch('/api/posts?status=approved');
+              const data = await res.json();
+              setPosts(data.posts);
+            } catch (error) {
+              console.error('Failed to fetch posts', error);
+            } finally {
+              setLoading(false);
+            }
+          }}
+          style={{
+            marginTop: '1rem',
+            padding: '0.5rem 1.5rem',
+            background: 'var(--primary)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '0.9rem',
+            fontWeight: '600',
+            transition: 'all 0.3s'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          🔄 Refresh News
+        </button>
       </header>
 
       {/* Top Banner Ad */}
