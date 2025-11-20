@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import AdSense from '@/components/AdSense';
+import BreakingNews from '@/components/BreakingNews';
 
 interface Post {
   id: string;
@@ -43,6 +44,11 @@ export default function Home() {
 
   return (
     <div className="container">
+      {/* Breaking News Marquee */}
+      <div style={{ marginBottom: '2rem', margin: '-2rem -2rem 2rem -2rem' }}>
+        <BreakingNews posts={posts.slice(0, 5)} />
+      </div>
+
       <header style={{ textAlign: 'center', margin: '2rem 0 1.5rem' }}>
         <h1 style={{
           fontSize: 'clamp(2rem, 5vw, 3rem)',
