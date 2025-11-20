@@ -6,8 +6,58 @@ import MobileNav from '@/components/MobileNav';
 const outfit = Outfit({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'CricTrend - Live Scores & News',
-  description: 'The latest cricket news and live scores',
+  metadataBase: new URL('https://crictrend.vercel.app'),
+  title: {
+    default: 'CricTrend - Live Cricket Scores & Latest News',
+    template: '%s | CricTrend',
+  },
+  description: 'Get live cricket scores, ball-by-ball commentary, and the latest cricket news. Stay updated with CricTrend - your ultimate cricket companion.',
+  keywords: ['cricket', 'live scores', 'cricket news', 'ball-by-ball', 'cricket updates', 'sports news', 'cricket commentary'],
+  authors: [{ name: 'CricTrend' }],
+  creator: 'CricTrend',
+  publisher: 'CricTrend',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://crictrend.vercel.app',
+    title: 'CricTrend - Live Cricket Scores & Latest News',
+    description: 'Get live cricket scores, ball-by-ball commentary, and the latest cricket news.',
+    siteName: 'CricTrend',
+    images: [
+      {
+        url: '/images/default-news.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'CricTrend - Cricket News and Scores',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CricTrend - Live Cricket Scores & Latest News',
+    description: 'Get live cricket scores, ball-by-ball commentary, and the latest cricket news.',
+    images: ['/images/default-news.jpg'],
+    creator: '@crictrend',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: 'your-google-verification-code',
+  },
 };
 
 export default function RootLayout({

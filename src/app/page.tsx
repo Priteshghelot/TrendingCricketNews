@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import AdSense from '@/components/AdSense';
 import BreakingNews from '@/components/BreakingNews';
+import SchemaOrg from '@/components/SchemaOrg';
 
 interface Post {
   id: string;
@@ -44,6 +45,24 @@ export default function Home() {
 
   return (
     <div className="container">
+      {/* Structured Data for SEO */}
+      <SchemaOrg
+        type="Website"
+        data={{
+          name: 'CricTrend',
+          url: 'https://crictrend.vercel.app',
+          description: 'Live cricket scores and latest cricket news',
+        }}
+      />
+      <SchemaOrg
+        type="Organization"
+        data={{
+          name: 'CricTrend',
+          url: 'https://crictrend.vercel.app',
+          description: 'Your source for live cricket scores and news',
+        }}
+      />
+
       {/* Breaking News Marquee */}
       <div style={{ marginBottom: '2rem', margin: '-2rem -2rem 2rem -2rem' }}>
         <BreakingNews posts={posts.slice(0, 5)} />
