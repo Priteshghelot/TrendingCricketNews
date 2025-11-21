@@ -86,6 +86,23 @@ try {
     isFsAvailable = false;
 }
 
+// Helper to save posts to file
+function savePosts(posts: Post[]) {
+    if (isFsAvailable) {
+        try {
+            const dir = path.dirname(DATA_FILE);
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true });
+            }
+            fs.writeFileSync(DATA_FILE, JSON.stringify(posts, null, 2));
+        } catch (error) {
+            console.warn('Error saving posts to file (likely read-only FS), data will be lost on restart:', error);
+            isFsAvailable = false;
+        }
+    }
+    globalPosts = posts; // Always update in-memory store
+}
+
 export function getPosts(): Post[] {
     if (isFsAvailable) {
         try {
@@ -100,24 +117,21 @@ export function getPosts(): Post[] {
     return globalPosts;
 }
 
-export function savePosts(posts: Post[]) {
-    // Always update in-memory
-    globalPosts = posts;
+export function getPostById(id: string): Post | undefined {
+    const posts = getPosts();
+    const post = posts.find((p) => p.id === id);
 
-    if (isFsAvailable) {
-        try {
-            // Ensure directory exists
-            const dir = path.dirname(DATA_FILE);
-            if (!fs.existsSync(dir)) {
-                fs.mkdirSync(dir, { recursive: true });
-            }
-            fs.writeFileSync(DATA_FILE, JSON.stringify(posts, null, 2));
-        } catch (error) {
-            console.warn('Error saving posts to file (likely read-only FS), data will be lost on restart:', error);
-            // Disable FS for future writes to avoid error log spam
-            isFsAvailable = false;
+    try {
+        const logMessage = `[${new Date().toISOString()}] getPostById called with id: ${id}, Found: ${!!post}, Total posts: ${posts.length}\n`;
+        fs.appendFileSync(path.join(process.cwd(), 'debug.log'), logMessage);
+        if (!post && posts.length > 0) {
+            fs.appendFileSync(path.join(process.cwd(), 'debug.log'), `First 5 IDs: ${posts.slice(0, 5).map(p => p.id).join(', ')}\n`);
         }
+    } catch (e) {
+        // Ignore logging errors
     }
+
+    return post;
 }
 
 export function addPost(post: Post) {
@@ -152,10 +166,10 @@ export function deletePost(id: string) {
     return false;
 }
 
-export function getScore(): Score {
-    return globalScore;
-}
-
 export function updateScore(score: Score) {
     globalScore = score;
+}
+
+export function getScore(): Score {
+    return globalScore;
 }

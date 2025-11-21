@@ -1,42 +1,31 @@
 import { MetadataRoute } from 'next';
 import { getPosts } from '@/lib/store';
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+export default function sitemap(): MetadataRoute.Sitemap {
+    const posts = getPosts();
     const baseUrl = 'https://crictrend.vercel.app';
 
-    // Get all approved posts
-    const allPosts = await getPosts();
-    const posts = allPosts.filter((p: any) => p.status === 'approved');
-
-    // Create post entries
-    const postEntries: MetadataRoute.Sitemap = posts.map((post: any) => ({
-        url: `${baseUrl}/#post-${post.id}`,
-        lastModified: new Date(post.timestamp),
+    // Static routes
+    const routes = [
+        '',
+        '/live',
+        '/archive',
+    ].map((route) => ({
+        url: `${baseUrl}${route}`,
+        lastModified: new Date().toISOString(),
         changeFrequency: 'daily' as const,
-        priority: 0.8,
+        priority: route === '' ? 1 : 0.8,
     }));
 
-    // Static pages
-    const staticPages: MetadataRoute.Sitemap = [
-        {
-            url: baseUrl,
-            lastModified: new Date(),
-            changeFrequency: 'hourly' as const,
-            priority: 1,
-        },
-        {
-            url: `${baseUrl}/live`,
-            lastModified: new Date(),
-            changeFrequency: 'always' as const,
-            priority: 0.9,
-        },
-        {
-            url: `${baseUrl}/archive`,
-            lastModified: new Date(),
-            changeFrequency: 'daily' as const,
+    // Dynamic routes for posts
+    const postRoutes = posts
+        .filter((post) => post.status === 'approved')
+        .map((post) => ({
+            url: `${baseUrl}/news/${post.id}`,
+            lastModified: new Date(post.timestamp).toISOString(),
+            changeFrequency: 'weekly' as const,
             priority: 0.7,
-        },
-    ];
+        }));
 
-    return [...staticPages, ...postEntries];
+    return [...routes, ...postRoutes];
 }
