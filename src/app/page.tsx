@@ -129,14 +129,14 @@ export default function Home() {
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: '4rem' }}>Loading trends...</div>
-      ) : posts.filter(p => Date.now() - p.timestamp < 2 * 24 * 60 * 60 * 1000).length === 0 ? (
+      ) : posts.filter(p => Date.now() - p.timestamp < 24 * 60 * 60 * 1000).length === 0 ? (
         <div style={{ textAlign: 'center', padding: '4rem', color: '#888' }}>
           <p>No recent news. Check the archive for older stories.</p>
         </div>
       ) : (
         <div className="grid">
           {posts
-            .filter(post => Date.now() - post.timestamp < 2 * 24 * 60 * 60 * 1000) // Filter < 48 hours
+            .filter(post => Date.now() - post.timestamp < 24 * 60 * 60 * 1000) // Filter < 24 hours
             .map((post, index) => (
               <React.Fragment key={post.id}>
                 <div

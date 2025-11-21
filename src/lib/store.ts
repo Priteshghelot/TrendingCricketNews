@@ -142,6 +142,16 @@ export function updatePostStatus(id: string, status: Post['status'], updateTimes
     }
 }
 
+export function deletePost(id: string) {
+    const posts = getPosts();
+    const newPosts = posts.filter(p => p.id !== id);
+    if (newPosts.length !== posts.length) {
+        savePosts(newPosts);
+        return true;
+    }
+    return false;
+}
+
 export function getScore(): Score {
     return globalScore;
 }

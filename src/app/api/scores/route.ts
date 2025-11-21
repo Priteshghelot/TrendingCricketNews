@@ -3,6 +3,9 @@ import { Score, Batsman, Bowler, MatchPreview } from '@/lib/store';
 import Parser from 'rss-parser';
 import * as cheerio from 'cheerio';
 
+export const dynamic = 'force-dynamic'; // Prevent static caching
+export const revalidate = 0; // Ensure fresh data on every request
+
 const parser = new Parser();
 const RSS_URL = 'https://static.cricinfo.com/rss/livescores.xml';
 
@@ -110,7 +113,8 @@ export async function GET(request: Request) {
                 const timeoutId = setTimeout(() => controller.abort(), 8000);
                 const res = await fetch(match.link, {
                     signal: controller.signal,
-                    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+                    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+                    cache: 'no-store'
                 });
                 clearTimeout(timeoutId);
 
@@ -307,7 +311,8 @@ async function scrapeRealCommentary(matchUrl: string, batters: string[], bowlers
         const timeoutId = setTimeout(() => controller.abort(), 8000);
         const res = await fetch(matchUrl, {
             signal: controller.signal,
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+            cache: 'no-store'
         });
         clearTimeout(timeoutId);
 

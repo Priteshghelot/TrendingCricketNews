@@ -79,6 +79,18 @@ export default function AdminPage() {
         }
     };
 
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this post?')) return;
+        try {
+            await fetch(`/api/posts?id=${id}`, {
+                method: 'DELETE',
+            });
+            setPosts(posts.filter(p => p.id !== id));
+        } catch (error) {
+            console.error('Failed to delete post', error);
+        }
+    };
+
     useEffect(() => {
         fetchPosts();
         fetchScore();
@@ -173,6 +185,15 @@ export default function AdminPage() {
                                         style={{ flex: 1 }}
                                     >
                                         Reject
+                                    </button>
+                                </div>
+                                <div style={{ marginTop: '1rem' }}>
+                                    <button
+                                        onClick={() => handleDelete(post.id)}
+                                        className="btn btn-danger"
+                                        style={{ width: '100%', background: '#ef4444' }}
+                                    >
+                                        Delete Post
                                     </button>
                                 </div>
                             </div>
