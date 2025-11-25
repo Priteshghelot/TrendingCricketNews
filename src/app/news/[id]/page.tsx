@@ -18,26 +18,72 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     if (!post) {
         return {
-            title: 'Story Not Found',
-            description: 'The requested cricket news story could not be found.',
+            title: 'Cricket News Not Found | CricTrend',
+            description: 'The requested cricket news story could not be found. Visit CricTrend for latest cricket news, live scores, and match updates.',
         };
     }
 
+    // Extract keywords from content
+    const keywords = [
+        'cricket news',
+        'latest cricket',
+        'cricket updates',
+        ...(post.keywords || ['cricket']),
+    ];
+
+    // Create SEO-optimized title (under 60 chars for Google)
+    const seoTitle = post.content.length > 55
+        ? post.content.substring(0, 52) + '...'
+        : post.content;
+
+    // Create compelling meta description (under 160 chars)
+    const metaDescription = post.highlights
+        ? post.highlights.substring(0, 157) + '...'
+        : `${post.content.substring(0, 140)}... Read the full cricket news story on CricTrend.`;
+
     return {
-        title: post.content.substring(0, 60) + (post.content.length > 60 ? '...' : ''),
-        description: post.highlights || post.content.substring(0, 160),
+        title: `${seoTitle} | CricTrend`,
+        description: metaDescription,
+        keywords: keywords.join(', '),
+        authors: [{ name: 'CricTrend' }],
+        publisher: 'CricTrend',
+        alternates: {
+            canonical: `https://crictrend.vercel.app/news/${id}`,
+        },
         openGraph: {
-            title: post.content.substring(0, 60),
-            description: post.highlights || post.content.substring(0, 160),
-            images: post.imageUrl ? [{ url: post.imageUrl }] : [],
+            title: seoTitle,
+            description: metaDescription,
+            url: `https://crictrend.vercel.app/news/${id}`,
+            siteName: 'CricTrend',
+            images: post.imageUrl ? [
+                {
+                    url: post.imageUrl,
+                    width: 1200,
+                    height: 630,
+                    alt: post.content,
+                }
+            ] : [],
             type: 'article',
             publishedTime: new Date(post.timestamp).toISOString(),
+            modifiedTime: new Date(post.timestamp).toISOString(),
+            authors: ['CricTrend'],
+            section: 'Cricket News',
+            tags: keywords,
         },
         twitter: {
             card: 'summary_large_image',
-            title: post.content.substring(0, 60),
-            description: post.highlights || post.content.substring(0, 160),
+            site: '@crictrend',
+            creator: '@crictrend',
+            title: seoTitle,
+            description: metaDescription,
             images: post.imageUrl ? [post.imageUrl] : [],
+        },
+        robots: {
+            index: true,
+            follow: true,
+            'max-image-preview': 'large',
+            'max-snippet': -1,
+            'max-video-preview': -1,
         },
     };
 }
@@ -52,15 +98,36 @@ export default async function NewsPage({ params }: Props) {
 
     return (
         <div className="container" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1rem' }}>
-            {/* Structured Data */}
+            {/* Enhanced Structured Data for Google */}
             <SchemaOrg
                 type="NewsArticle"
                 data={{
                     headline: post.content.substring(0, 110),
-                    image: post.imageUrl ? [post.imageUrl] : [],
+                    description: post.highlights || post.content,
+                    image: post.imageUrl ? [post.imageUrl] : ['https://crictrend.vercel.app/images/default-news.jpg'],
                     datePublished: new Date(post.timestamp).toISOString(),
                     dateModified: new Date(post.timestamp).toISOString(),
-                    author: [{ name: 'CricTrend', url: 'https://crictrend.vercel.app' }],
+                    author: [
+                        {
+                            '@type': 'Organization',
+                            name: 'CricTrend',
+                            url: 'https://crictrend.vercel.app',
+                        }
+                    ],
+                    publisher: {
+                        '@type': 'Organization',
+                        name: 'CricTrend',
+                        logo: {
+                            '@type': 'ImageObject',
+                            url: 'https://crictrend.vercel.app/images/default-news.jpg',
+                        },
+                    },
+                    mainEntityOfPage: {
+                        '@type': 'WebPage',
+                        '@id': `https://crictrend.vercel.app/news/${post.id}`,
+                    },
+                    articleSection: 'Cricket News',
+                    keywords: (post.keywords || ['cricket']).join(', '),
                 }}
             />
 
