@@ -1,10 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import AdSense from '@/components/AdSense';
 import BreakingNews from '@/components/BreakingNews';
 import SchemaOrg from '@/components/SchemaOrg';
+import ShareButtons from '@/components/ShareButtons';
+import NotificationPrompt from '@/components/NotificationPrompt';
+import { trackModalOpen } from '@/lib/analytics';
+import { notifyNewCricketNews, getNotificationPermission } from '@/lib/push';
 
 interface Post {
   id: string;
@@ -20,15 +24,33 @@ interface Post {
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [timeLeft, setTimeLeft] = useState(10);
-  const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const previousPostIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
+        // Trigger news fetch first to get latest cricket news
+        await fetch('/api/cron/news');
+
+        // Then get approved posts
         const res = await fetch('/api/posts?status=approved');
         const data = await res.json();
-        setPosts(data.posts);
+        const newPosts = data.posts;
+
+        // Check for new posts and send notifications
+        if (previousPostIds.current.size > 0 && getNotificationPermission() === 'granted') {
+          newPosts.forEach((post: Post) => {
+            if (!previousPostIds.current.has(post.id)) {
+              // New post detected - send notification
+              notifyNewCricketNews(post.content, post.id, post.imageUrl);
+            }
+          });
+        }
+
+        // Update previous post IDs
+        previousPostIds.current = new Set(newPosts.map((p: Post) => p.id));
+        setPosts(newPosts);
       } catch (error) {
         console.error('Failed to fetch posts', error);
       } finally {
@@ -39,45 +61,32 @@ export default function Home() {
     // Initial fetch
     fetchPosts();
 
-    // Timer logic
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          // Trigger refresh
-          setIsAutoRefreshing(true);
-          fetchPosts().then(() => {
-            setTimeout(() => setIsAutoRefreshing(false), 1000); // Reset animation after 1s
-          });
-          return 10; // Reset timer
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    // Auto-refresh every 10 seconds
+    const interval = setInterval(() => {
+      fetchPosts();
+    }, 10000);
 
-    return () => clearInterval(timer);
+    return () => clearInterval(interval);
   }, []);
 
-  const handleManualRefresh = async () => {
-    setLoading(true);
-    try {
-      await fetch('/api/cron/news');
-      const res = await fetch('/api/posts?status=approved');
-      const data = await res.json();
-      setPosts(data.posts);
-      setTimeLeft(10); // Reset timer on manual refresh
-    } catch (error) {
-      console.error('Failed to fetch posts', error);
-    } finally {
-      setLoading(false);
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (selectedPost) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
     }
-  };
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedPost]);
 
   // Filter posts safely
-  // Since posts is empty initially, Date.now() won't run on server, so this is safe.
   const recentPosts = posts.filter(post => Date.now() - post.timestamp < 24 * 60 * 60 * 1000);
 
   return (
-    <div className="container">
+    <div className="container" style={{ padding: '2rem 1.5rem' }}>
+      <NotificationPrompt />
       {/* Structured Data for SEO */}
       <SchemaOrg
         type="Website"
@@ -110,55 +119,9 @@ export default function Home() {
         }}>
           Latest <span style={{ color: 'var(--primary)' }}>Cricket News</span>
         </h1>
-        <p style={{ color: '#94a3b8', fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', padding: '0 1rem' }}>Match reports, highlights, and trending stories.</p>
-
-        {/* Manual Refresh Button with Timer */}
-        <button
-          onClick={handleManualRefresh}
-          className={`btn ${isAutoRefreshing ? 'pulse-animation' : ''}`}
-          style={{
-            marginTop: '1rem',
-            padding: 'clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem)',
-            background: 'var(--primary)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
-            fontWeight: '600',
-            transition: 'all 0.3s',
-            opacity: loading ? 0.7 : 1,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            margin: '1rem auto'
-          }}
-          disabled={loading}
-        >
-          {loading ? '🔄 Refreshing...' : (
-            <>
-              <span>🔄 Refresh News</span>
-              <span style={{
-                background: 'rgba(255,255,255,0.2)',
-                padding: '2px 8px',
-                borderRadius: '12px',
-                fontSize: '0.8em'
-              }}>
-                {timeLeft}s
-              </span>
-            </>
-          )}
-        </button>
-        <style jsx>{`
-          @keyframes pulse-ring {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-          }
-          .pulse-animation {
-            animation: pulse-ring 1s cubic-bezier(0.24, 0, 0.38, 1) infinite;
-          }
-        `}</style>
+        <p style={{ color: '#94a3b8', fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', padding: '0 1rem' }}>
+          Match reports, highlights, and trending stories. Auto-updates every 10 seconds.
+        </p>
       </header>
 
       {/* Top Banner Ad */}
@@ -181,10 +144,28 @@ export default function Home() {
           {recentPosts
             .map((post, index) => (
               <React.Fragment key={post.id}>
-                <Link
-                  href={`/news/${post.id}`}
+                <div
+                  onClick={() => {
+                    setSelectedPost(post);
+                    trackModalOpen(post.content);
+                  }}
                   className="card animate-fade-in"
-                  style={{ animationDelay: `${index * 0.1}s`, cursor: 'pointer', display: 'block', textDecoration: 'none', color: 'inherit' }}
+                  style={{
+                    animationDelay: `${index * 0.1}s`,
+                    cursor: 'pointer',
+                    display: 'block',
+                    textDecoration: 'none',
+                    color: 'inherit',
+                    transition: 'transform 0.3s ease, box-shadow 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '';
+                  }}
                 >
                   {post.imageUrl && (
                     <div style={{ height: 'clamp(180px, 35vw, 250px)', overflow: 'hidden' }}>
@@ -204,7 +185,7 @@ export default function Home() {
                       {new Date(post.timestamp).toLocaleDateString()}
                     </span>
                   </div>
-                </Link>
+                </div>
 
                 {/* In-Content Ad - Show after every 4 articles */}
                 {(index + 1) % 4 === 0 && index !== recentPosts.length - 1 && (
@@ -221,6 +202,167 @@ export default function Home() {
             ))}
         </div>
       )}
+
+      {/* Modal for News Details */}
+      {selectedPost && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.85)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+            animation: 'fadeIn 0.3s ease',
+            overflowY: 'auto'
+          }}
+          onClick={() => setSelectedPost(null)}
+        >
+          <div
+            style={{
+              background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+              borderRadius: '16px',
+              maxWidth: '800px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              position: 'relative',
+              animation: 'slideUp 0.3s ease',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedPost(null)}
+              style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                background: 'rgba(255,255,255,0.1)',
+                border: 'none',
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                fontSize: '1.5rem',
+                color: 'white',
+                zIndex: 10,
+                transition: 'background 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+            >
+              ×
+            </button>
+
+            {/* Modal Content */}
+            {selectedPost.imageUrl && (
+              <div style={{ width: '100%', height: 'auto', borderRadius: '16px 16px 0 0', overflow: 'hidden' }}>
+                <img
+                  src={selectedPost.imageUrl}
+                  alt={selectedPost.content}
+                  style={{ width: '100%', height: 'auto', display: 'block' }}
+                />
+              </div>
+            )}
+
+            <div style={{ padding: 'clamp(1.5rem, 4vw, 3rem)' }}>
+              <h2 style={{
+                fontSize: 'clamp(1.5rem, 4vw, 2.5rem)',
+                lineHeight: '1.3',
+                marginBottom: '1rem',
+                color: '#fff'
+              }}>
+                {selectedPost.content}
+              </h2>
+
+              <div style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '2rem' }}>
+                Published on {new Date(selectedPost.timestamp).toLocaleDateString()} at {new Date(selectedPost.timestamp).toLocaleTimeString()}
+              </div>
+
+              {selectedPost.highlights && (
+                <div style={{
+                  fontSize: '1.1rem',
+                  lineHeight: '1.8',
+                  color: '#e2e8f0',
+                  marginBottom: '2rem'
+                }}>
+                  <p style={{ whiteSpace: 'pre-wrap' }}>{selectedPost.highlights}</p>
+                </div>
+              )}
+
+              {selectedPost.sourceUrl && (
+                <div style={{ marginTop: '2rem' }}>
+                  <a
+                    href={selectedPost.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-block',
+                      background: 'var(--primary)',
+                      color: 'white',
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      fontWeight: '600',
+                      transition: 'transform 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  >
+                    Read Full Story on Source →
+                  </a>
+                </div>
+              )}
+
+              {/* Share Buttons */}
+              <ShareButtons
+                title={selectedPost.content}
+                url={`https://crictrend.vercel.app/news/${selectedPost.id}`}
+              />
+
+              {selectedPost.keywords && selectedPost.keywords.length > 0 && (
+                <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid #334155' }}>
+                  <h4 style={{ fontSize: '0.9rem', color: '#94a3b8', marginBottom: '1rem' }}>TOPICS</h4>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    {selectedPost.keywords.map((keyword, idx) => (
+                      <span key={idx} style={{ background: '#1e293b', color: '#cbd5e1', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.85rem' }}>
+                        #{keyword}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { 
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }

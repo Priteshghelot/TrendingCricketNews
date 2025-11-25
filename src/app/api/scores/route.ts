@@ -9,26 +9,10 @@ export const revalidate = 0; // Ensure fresh data on every request
 const parser = new Parser();
 const RSS_URL = 'https://static.cricinfo.com/rss/livescores.xml';
 
-// Simple in-memory cache
-let cache: {
-    data: Score | null;
-    timestamp: number;
-} = {
-    data: null,
-    timestamp: 0
-};
-
-const CACHE_DURATION = 30 * 1000; // 30 seconds
-
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const requestedId = searchParams.get('id');
-
-        // Check cache (skip if specific ID requested to ensure fresh data for switch)
-        if (!requestedId && cache.data && (Date.now() - cache.timestamp < CACHE_DURATION)) {
-            return NextResponse.json(cache.data);
-        }
 
         const feed = await parser.parseURL(RSS_URL);
 
@@ -288,12 +272,6 @@ export async function GET(request: Request) {
             commentary: await scrapeRealCommentary(match.link || '', currentBatters, currentBowlers),
             detailedScore,
             upcomingMatches
-        };
-
-        // Update cache
-        cache = {
-            data: autoScore,
-            timestamp: Date.now()
         };
 
         return NextResponse.json(autoScore);

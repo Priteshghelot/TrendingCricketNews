@@ -13,38 +13,93 @@ const RSS_FEEDS = [
     'https://www.skysports.com/rss/12040' // Sky Sports Cricket
 ];
 
+// Cricket-related keywords for filtering
+const CRICKET_KEYWORDS = [
+    'cricket', 'wicket', 'batsman', 'batter', 'bowler', 'innings', 'test match',
+    'odi', 't20', 'ipl', 'bbl', 'psl', 'cpl', 'hundred', 'ashes', 'world cup',
+    'run', 'over', 'maiden', 'boundary', 'six', 'four', 'stumps', 'catch',
+    'lbw', 'run out', 'century', 'half-century', 'duck', 'hat-trick',
+    'spinner', 'pacer', 'all-rounder', 'captain', 'umpire', 'drs', 'review',
+    'test cricket', 'one day', 'twenty20', 'series', 'match', 'pitch', 'toss'
+];
+
+// Function to check if content is cricket-related
+function isCricketRelated(title: string, content: string): boolean {
+    const combinedText = `${title} ${content}`.toLowerCase();
+    return CRICKET_KEYWORDS.some(keyword => combinedText.includes(keyword.toLowerCase()));
+}
+
+// Function to extract full article content
+async function extractArticleContent(url: string, html: string): Promise<string> {
+    const $ = cheerio.load(html);
+
+    // Try multiple content selectors in order of preference
+    let content = '';
+
+    // Try article body
+    const articleBody = $('article').text().trim();
+    if (articleBody && articleBody.length > 200) {
+        content = articleBody;
+    }
+
+    // Try main content area
+    if (!content) {
+        const mainContent = $('main').text().trim();
+        if (mainContent && mainContent.length > 200) {
+            content = mainContent;
+        }
+    }
+
+    // Try common content classes
+    if (!content) {
+        const contentDiv = $('.article-content, .story-content, .post-content, .entry-content').text().trim();
+        if (contentDiv && contentDiv.length > 200) {
+            content = contentDiv;
+        }
+    }
+
+    // Try paragraphs within article
+    if (!content) {
+        const paragraphs = $('article p').map((_, el) => $(el).text().trim()).get().join(' ');
+        if (paragraphs && paragraphs.length > 200) {
+            content = paragraphs;
+        }
+    }
+
+    // Clean up the content
+    content = content
+        .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
+        .replace(/\n+/g, '\n') // Replace multiple newlines with single newline
+        .trim();
+
+    // Limit to reasonable length (first 1000 characters)
+    if (content.length > 1000) {
+        content = content.substring(0, 1000) + '...';
+    }
+
+    return content || '';
+}
+
 export async function GET() {
     try {
-        console.log('Starting news fetch...');
+        console.log('Starting cricket news fetch...');
 
-        // 1. Auto-approve pending posts older than 10 minutes
-        // AND Auto-archive approved posts older than 24 hours
+        // 1. Auto-archive approved posts older than 24 hours
         const allPosts = getPosts();
-        const pendingPosts = allPosts.filter(p => p.status === 'pending');
         const approvedPosts = allPosts.filter(p => p.status === 'approved');
-        let autoApprovedCount = 0;
         let autoArchivedCount = 0;
 
-        const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
         const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
-
-        for (const post of pendingPosts) {
-            if (post.timestamp < tenMinutesAgo) {
-                updatePostStatus(post.id, 'approved', true);
-                autoApprovedCount++;
-                console.log(`Auto-approved post: ${post.id}`);
-            }
-        }
 
         for (const post of approvedPosts) {
             if (post.timestamp < twentyFourHoursAgo) {
-                updatePostStatus(post.id, 'archived', false); // Don't update timestamp when archiving
+                updatePostStatus(post.id, 'archived', false);
                 autoArchivedCount++;
                 console.log(`Auto-archived post: ${post.id}`);
             }
         }
 
-        // 2. Fetch new posts from all sources
+        // 2. Fetch new cricket posts from all sources
         const existingPosts = getPosts();
         let newPostsCount = 0;
 
@@ -54,16 +109,26 @@ export async function GET() {
                 const feed = await parser.parseURL(feedUrl);
 
                 for (const item of feed.items) {
-                    // Check for duplicates based on link or title
+                    // Check for duplicates based on exact title match or source URL
                     const isDuplicate = existingPosts.some(p =>
-                        p.sourceUrl === item.link || p.content.includes(item.title || '')
+                        p.sourceUrl === item.link ||
+                        p.content.toLowerCase().trim() === (item.title || '').toLowerCase().trim()
                     );
 
                     if (!isDuplicate && item.title && item.link) {
-                        console.log(`Found new article: ${item.title}`);
+                        // First check if it's cricket-related
+                        const itemContent = item.contentSnippet || item.content || '';
+                        if (!isCricketRelated(item.title, itemContent)) {
+                            console.log(`Skipping non-cricket article: ${item.title}`);
+                            continue;
+                        }
 
-                        // Scrape for image with multiple fallbacks
+                        console.log(`Found new cricket article: ${item.title}`);
+
+                        // Scrape for image and full content
                         let imageUrl = null;
+                        let fullContent = '';
+
                         try {
                             const controller = new AbortController();
                             const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -79,6 +144,9 @@ export async function GET() {
                                 const html = await res.text();
                                 const $ = cheerio.load(html);
 
+                                // Extract full article content
+                                fullContent = await extractArticleContent(item.link, html);
+
                                 // Try multiple image sources in order of preference
                                 const ogImage = $('meta[property="og:image"]').attr('content');
                                 const twitterImage = $('meta[name="twitter:image"]').attr('content') || $('meta[property="twitter:image"]').attr('content');
@@ -89,36 +157,45 @@ export async function GET() {
                                 imageUrl = ogImage || twitterImage || articleImage || firstImage || null;
 
                                 // Ensure absolute URL
-                                if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+                                if (imageUrl && !imageUrl.startsWith('http')) {
                                     const baseUrl = new URL(item.link);
-                                    imageUrl = new URL(imageUrl, baseUrl.origin).href;
+                                    if (imageUrl.startsWith('/')) {
+                                        imageUrl = baseUrl.origin + imageUrl;
+                                    } else {
+                                        imageUrl = new URL(imageUrl, baseUrl.origin).href;
+                                    }
                                 }
 
-                                // Filter out default/placeholder images if known (basic check)
-                                if (imageUrl && (imageUrl.includes('default') || imageUrl.includes('placeholder'))) {
+                                // Filter out default/placeholder images
+                                if (imageUrl && (imageUrl.includes('default') || imageUrl.includes('placeholder') || imageUrl.includes('logo'))) {
                                     imageUrl = null;
                                 }
 
                                 console.log(`Image found for ${item.title}: ${imageUrl}`);
                             }
                         } catch (e) {
-                            console.warn(`Failed to scrape image for ${item.link}:`, e);
+                            console.warn(`Failed to scrape content for ${item.link}:`, e);
                         }
 
                         // STRICT RULE: Only add post if valid image found
                         if (imageUrl) {
+                            // Use full content if available, otherwise use RSS snippet
+                            const contentToUse = fullContent || itemContent;
+
                             const newPost: Post = {
                                 id: uuidv4(),
-                                content: `**${item.title}**\n\n${item.contentSnippet || item.content || ''}`,
+                                content: item.title, // Store title as main content
                                 imageUrl: imageUrl,
-                                status: 'pending', // Default to pending, will be auto-approved later
+                                status: 'approved', // Auto-approve cricket posts immediately
                                 timestamp: new Date(item.pubDate || Date.now()).getTime(),
                                 sourceUrl: item.link,
-                                highlights: item.categories?.join(', ') || 'Cricket News'
+                                highlights: contentToUse, // Store full content in highlights
+                                keywords: ['cricket']
                             };
 
                             addPost(newPost);
                             newPostsCount++;
+                            console.log(`Added cricket post: ${item.title}`);
                         } else {
                             console.log(`Skipping article due to missing image: ${item.title}`);
                         }
@@ -131,9 +208,8 @@ export async function GET() {
 
         return NextResponse.json({
             success: true,
-            message: `Fetched ${newPostsCount} new articles, Auto-approved ${autoApprovedCount} pending posts, Auto-archived ${autoArchivedCount} posts`,
+            message: `Fetched ${newPostsCount} new cricket articles, Auto-archived ${autoArchivedCount} posts`,
             newPostsCount,
-            autoApprovedCount,
             autoArchivedCount
         });
     } catch (error) {

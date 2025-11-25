@@ -2,6 +2,7 @@ import './globals.css';
 import Link from 'next/link';
 import { Outfit } from 'next/font/google';
 import MobileNav from '@/components/MobileNav';
+import GoogleAnalytics from '@/components/GoogleAnalytics';
 
 const outfit = Outfit({ subsets: ['latin'] });
 
@@ -69,6 +70,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+        <meta name="theme-color" content="#0f172a" />
         {/* Google AdSense */}
         <script
           async
@@ -77,6 +79,7 @@ export default function RootLayout({
         />
       </head>
       <body className={outfit.className}>
+        <GoogleAnalytics />
         <nav style={{
           borderBottom: '1px solid var(--card-border)',
           padding: '1rem 0',
