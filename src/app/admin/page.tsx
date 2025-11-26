@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import AnalyticsViewer from '@/components/AnalyticsViewer';
 
 interface Post {
     id: string;
@@ -98,6 +99,8 @@ export default function AdminPage() {
 
     return (
         <div className="container">
+            <AnalyticsViewer />
+
             <div className="card" style={{ padding: '2rem', marginBottom: '3rem' }}>
                 <h2 style={{ marginBottom: '1.5rem' }}>Live Score Manager</h2>
                 <form onSubmit={updateScore} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

@@ -6,11 +6,29 @@ import { v4 as uuidv4 } from 'uuid';
 
 const parser = new Parser();
 
-// Multiple RSS feeds for broader coverage
+// Multiple RSS feeds for broader coverage from diverse sources
 const RSS_FEEDS = [
-    'https://www.espncricinfo.com/rss/content/story/feeds/0.xml',
-    'http://newsrss.bbc.co.uk/rss/sportonline_uk_edition/cricket/rss.xml',
-    'https://www.skysports.com/rss/12040' // Sky Sports Cricket
+    // International Cricket News
+    'https://www.espncricinfo.com/rss/content/story/feeds/0.xml', // ESPN Cricinfo
+    'http://newsrss.bbc.co.uk/rss/sportonline_uk_edition/cricket/rss.xml', // BBC Sport Cricket
+    'https://www.skysports.com/rss/12040', // Sky Sports Cricket
+
+    // Additional Cricket Sources
+    'https://cricketaddictor.com/feed/', // Cricket Addictor
+    'https://www.crictracker.com/feed/', // CricTracker
+    'https://www.cricket.com.au/feed', // Cricket Australia
+    'https://www.icc-cricket.com/rss/news', // ICC Official
+
+    // Regional Cricket News
+    'https://timesofindia.indiatimes.com/rssfeeds/4719148.cms', // Times of India Cricket
+    'https://www.hindustantimes.com/feeds/rss/cricket/rssfeed.xml', // Hindustan Times Cricket
+
+    // Twitter/X via Nitter (Alternative Twitter Frontend with RSS)
+    'https://nitter.net/ICC/rss', // ICC Official Twitter
+    'https://nitter.net/ESPNcricinfo/rss', // ESPN Cricinfo Twitter
+    'https://nitter.net/cricketcomau/rss', // Cricket Australia Twitter
+    'https://nitter.net/BCCI/rss', // BCCI Official Twitter
+    'https://nitter.net/englandcricket/rss', // England Cricket Twitter
 ];
 
 // Cricket-related keywords for filtering
@@ -33,10 +51,13 @@ function isCricketRelated(title: string, content: string): boolean {
 async function extractArticleContent(url: string, html: string): Promise<string> {
     const $ = cheerio.load(html);
 
+    // Remove unwanted elements before extracting text
+    $('script, style, noscript, iframe, nav, header, footer, aside, .ad, .advertisement, [class*="ad-"], [id*="ad-"]').remove();
+
     // Try multiple content selectors in order of preference
     let content = '';
 
-    // Try article body
+    // Try article body (now cleaned)
     const articleBody = $('article').text().trim();
     if (articleBody && articleBody.length > 200) {
         content = articleBody;
@@ -70,6 +91,8 @@ async function extractArticleContent(url: string, html: string): Promise<string>
     content = content
         .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
         .replace(/\n+/g, '\n') // Replace multiple newlines with single newline
+        .replace(/document\.currentScript[^}]*}/g, '') // Remove any remaining ad config scripts
+        .replace(/\{[^}]*"ad-type"[^}]*\}/g, '') // Remove ad configuration objects
         .trim();
 
     // Limit to reasonable length (first 1000 characters)
