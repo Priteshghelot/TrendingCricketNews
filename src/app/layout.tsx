@@ -9,12 +9,23 @@ const outfit = Outfit({ subsets: ['latin'] });
 export const metadata = {
   metadataBase: new URL('https://crictrend.vercel.app'),
   title: {
-    default: 'CricTrend - Live Cricket Scores & Latest News',
-    template: '%s | CricTrend',
+    default: 'Latest Cricket News, Live Scores & Breaking Updates | CricTrend',
+    template: '%s | CricTrend - #1 for Cricket News',
   },
-  description: 'Get live cricket scores, ball-by-ball commentary, and the latest cricket news. Stay updated with CricTrend - your ultimate cricket companion.',
-  keywords: ['cricket', 'live scores', 'cricket news', 'ball-by-ball', 'cricket updates', 'sports news', 'cricket commentary'],
-  authors: [{ name: 'CricTrend' }],
+  description: '⚡ Get the fastest Cricket News, Live Scores, and Ball-by-Ball Commentary. Breaking updates on IPL, World Cup, Test Cricket, ODI, and T20. Stay ahead with CricTrend.',
+  keywords: [
+    'latest cricket news',
+    'breaking cricket news',
+    'live cricket scores',
+    'cricket updates today',
+    'ball by ball commentary',
+    'IPL news',
+    'cricket world cup',
+    'Indian cricket team news',
+    'test match score',
+    'today match update'
+  ],
+  authors: [{ name: 'CricTrend Sports Desk' }],
   creator: 'CricTrend',
   publisher: 'CricTrend',
   formatDetection: {
@@ -26,22 +37,22 @@ export const metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://crictrend.vercel.app',
-    title: 'CricTrend - Live Cricket Scores & Latest News',
-    description: 'Get live cricket scores, ball-by-ball commentary, and the latest cricket news.',
+    title: 'Latest Cricket News & Live Scores | CricTrend',
+    description: '⚡ Breaking: Get the fastest cricket news, live match scores, and expert analysis. Coverage of IPL, Team India, Australia, England, and World Cricket.',
     siteName: 'CricTrend',
     images: [
       {
         url: '/images/default-news.jpg',
         width: 1200,
         height: 630,
-        alt: 'CricTrend - Cricket News and Scores',
+        alt: 'Latest Cricket News and Live Scores - CricTrend',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'CricTrend - Live Cricket Scores & Latest News',
-    description: 'Get live cricket scores, ball-by-ball commentary, and the latest cricket news.',
+    title: 'Latest Cricket News & Live Scores | CricTrend',
+    description: '⚡ Breaking: Get the fastest cricket news, live match scores, and expert analysis.',
     images: ['/images/default-news.jpg'],
     creator: '@crictrend',
   },
@@ -57,7 +68,7 @@ export const metadata = {
     },
   },
   verification: {
-    google: 'your-google-verification-code',
+    google: 'google58b03ba23a8ce0bc',
   },
 };
 

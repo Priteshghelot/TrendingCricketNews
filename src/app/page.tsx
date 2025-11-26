@@ -296,16 +296,20 @@ export default function Home() {
                 Published on {new Date(selectedPost.timestamp).toLocaleDateString()} at {new Date(selectedPost.timestamp).toLocaleTimeString()}
               </div>
 
-              {selectedPost.highlights && (
-                <div style={{
-                  fontSize: '1.1rem',
-                  lineHeight: '1.8',
-                  color: '#e2e8f0',
-                  marginBottom: '2rem'
-                }}>
+              <div style={{
+                fontSize: '1.1rem',
+                lineHeight: '1.8',
+                color: '#e2e8f0',
+                marginBottom: '2rem'
+              }}>
+                {selectedPost.highlights ? (
                   <p style={{ whiteSpace: 'pre-wrap' }}>{selectedPost.highlights}</p>
-                </div>
-              )}
+                ) : (
+                  <p style={{ fontStyle: 'italic', color: '#94a3b8' }}>
+                    Full details for this story are available on the source website. Click the button below to read more.
+                  </p>
+                )}
+              </div>
 
               {selectedPost.sourceUrl && (
                 <div style={{ marginTop: '2rem' }}>
