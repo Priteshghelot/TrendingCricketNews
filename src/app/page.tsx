@@ -28,32 +28,39 @@ export default function Home() {
   const previousPostIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchPosts = async (isBackground = false) => {
       try {
-        // Trigger news fetch first to get latest cricket news
-        await fetch('/api/cron/news');
-
-        // Then get approved posts
+        // 1. Fetch existing posts immediately
         const res = await fetch('/api/posts?status=approved');
         const data = await res.json();
         const newPosts = data.posts;
+
+        // Update state immediately
+        setPosts(newPosts);
+        if (!isBackground) setLoading(false);
 
         // Check for new posts and send notifications
         if (previousPostIds.current.size > 0 && getNotificationPermission() === 'granted') {
           newPosts.forEach((post: Post) => {
             if (!previousPostIds.current.has(post.id)) {
-              // New post detected - send notification
               notifyNewCricketNews(post.content, post.id, post.imageUrl);
             }
           });
         }
 
-        // Update previous post IDs
         previousPostIds.current = new Set(newPosts.map((p: Post) => p.id));
-        setPosts(newPosts);
+
+        // 2. Trigger background news fetch (non-blocking)
+        // Only do this on initial load or if explicitly requested
+        if (!isBackground) {
+          fetch('/api/cron/news').then(() => {
+            // After background fetch is done, refresh posts silently
+            fetchPosts(true);
+          }).catch(console.error);
+        }
+
       } catch (error) {
         console.error('Failed to fetch posts', error);
-      } finally {
         setLoading(false);
       }
     };
@@ -61,9 +68,9 @@ export default function Home() {
     // Initial fetch
     fetchPosts();
 
-    // Auto-refresh every 10 seconds
+    // Auto-refresh every 10 seconds (check for new posts in DB only)
     const interval = setInterval(() => {
-      fetchPosts();
+      fetchPosts(true);
     }, 10000);
 
     return () => clearInterval(interval);
