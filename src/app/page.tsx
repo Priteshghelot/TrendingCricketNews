@@ -88,8 +88,8 @@ export default function Home() {
     };
   }, [selectedPost]);
 
-  // Filter posts safely
-  const recentPosts = posts.filter(post => Date.now() - post.timestamp < 24 * 60 * 60 * 1000);
+  // Show all approved posts (not just recent 24h)
+  const approvedPosts = posts;
 
   return (
     <div className="container" style={{ padding: '2rem 1.5rem' }}>
@@ -142,13 +142,13 @@ export default function Home() {
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: '4rem' }}>Loading trends...</div>
-      ) : recentPosts.length === 0 ? (
+      ) : approvedPosts.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '4rem', color: '#888' }}>
-          <p>No recent news. Check the archive for older stories.</p>
+          <p>No news available. Check back soon!</p>
         </div>
       ) : (
         <div className="grid">
-          {recentPosts
+          {approvedPosts
             .map((post, index) => (
               <React.Fragment key={post.id}>
                 <div
@@ -195,7 +195,7 @@ export default function Home() {
                 </div>
 
                 {/* In-Content Ad - Show after every 4 articles */}
-                {(index + 1) % 4 === 0 && index !== recentPosts.length - 1 && (
+                {(index + 1) % 4 === 0 && index !== approvedPosts.length - 1 && (
                   <div className="card" style={{ gridColumn: '1 / -1', padding: '2rem', background: 'rgba(255,255,255,0.02)' }}>
                     <AdSense
                       adSlot="0987654321"

@@ -11,11 +11,15 @@ export default function NotificationPrompt() {
         // Check if notifications are supported
         if (!areNotificationsSupported()) return;
 
+        // Check if user previously dismissed the prompt
+        const wasDismissed = localStorage.getItem('notification-prompt-dismissed');
+        if (wasDismissed === 'true') return;
+
         // Get current permission
         const currentPermission = getNotificationPermission();
         setPermission(currentPermission);
 
-        // Show prompt after 3 seconds if permission not yet granted
+        // Show prompt after 3 seconds if permission not yet granted/denied
         if (currentPermission === 'default') {
             const timer = setTimeout(() => {
                 setShowPrompt(true);

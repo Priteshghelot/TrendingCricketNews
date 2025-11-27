@@ -2,7 +2,7 @@ import React from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getPostById } from '@/lib/store';
+import { getPostById, getPosts } from '@/lib/store';
 import AdSense from '@/components/AdSense';
 import SchemaOrg from '@/components/SchemaOrg';
 
@@ -11,6 +11,23 @@ interface Props {
         id: string;
     }>;
 }
+
+// Generate static paths for the most recent 200 posts
+export async function generateStaticParams() {
+    const posts = getPosts();
+    // Get recent approved posts (limit to 200 for build performance)
+    const recentPosts = posts
+        .filter(p => p.status === 'approved')
+        .slice(0, 200);
+
+    return recentPosts.map((post) => ({
+        id: post.id,
+    }));
+}
+
+// Enable dynamic rendering for posts not pre-generated
+export const dynamicParams = true;
+
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;

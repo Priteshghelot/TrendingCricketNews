@@ -132,11 +132,33 @@ export async function GET() {
                 const feed = await parser.parseURL(feedUrl);
 
                 for (const item of feed.items) {
-                    // Check for duplicates based on exact title match or source URL
-                    const isDuplicate = existingPosts.some(p =>
-                        p.sourceUrl === item.link ||
-                        p.content.toLowerCase().trim() === (item.title || '').toLowerCase().trim()
-                    );
+                    // Normalize title for comparison
+                    const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+                    const newTitle = normalize(item.title || '');
+
+                    // Check for duplicates based on URL or fuzzy title match
+                    const isDuplicate = existingPosts.some(p => {
+                        // 1. Exact URL match
+                        if (p.sourceUrl === item.link) return true;
+
+                        // 2. Fuzzy Title Match
+                        const existingTitle = normalize(p.content);
+
+                        // If titles are identical
+                        if (existingTitle === newTitle) return true;
+
+                        // If one title contains the other (and is significant length)
+                        if (newTitle.length > 20 && (existingTitle.includes(newTitle) || newTitle.includes(existingTitle))) return true;
+
+                        // Similarity check (simple Jaccard index on words)
+                        const words1 = new Set(newTitle.split(/\s+/));
+                        const words2 = new Set(existingTitle.split(/\s+/));
+                        const intersection = new Set([...words1].filter(x => words2.has(x)));
+                        const union = new Set([...words1, ...words2]);
+
+                        // If 70% of words match, consider it a duplicate
+                        return (intersection.size / union.size) > 0.7;
+                    });
 
                     if (!isDuplicate && item.title && item.link) {
                         // First check if it's cricket-related

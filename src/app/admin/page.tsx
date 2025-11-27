@@ -146,11 +146,34 @@ export default function AdminPage() {
                 </form>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', gap: '1rem', flexWrap: 'wrap' }}>
                 <h1>Pending News</h1>
-                <button onClick={fetchNewTrends} className="btn btn-primary">
-                    Fetch Cricket News (RSS)
-                </button>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                    <a
+                        href="/admin/analytics"
+                        className="btn"
+                        style={{ background: '#8b5cf6', color: 'white' }}
+                    >
+                        📊 View Analytics
+                    </a>
+                    <button
+                        onClick={async () => {
+                            if (confirm('Clean up posts older than 30 days?')) {
+                                const res = await fetch('/api/cleanup', { method: 'POST' });
+                                const data = await res.json();
+                                alert(`${data.message}\nRemaining posts: ${data.remainingPosts}`);
+                                fetchPosts();
+                            }
+                        }}
+                        className="btn"
+                        style={{ background: '#f59e0b', color: 'white' }}
+                    >
+                        🧹 Cleanup Old Posts
+                    </button>
+                    <button onClick={fetchNewTrends} className="btn btn-primary">
+                        Fetch Cricket News (RSS)
+                    </button>
+                </div>
             </div>
 
             {loading ? (

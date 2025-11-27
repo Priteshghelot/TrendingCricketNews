@@ -16,8 +16,12 @@ export async function POST() {
         const itemsToProcess = feed.items.slice(0, 6);
 
         for (const item of itemsToProcess) {
-            // Simple check to avoid duplicates based on title
-            const isDuplicate = existingPosts.some(p => p.content === item.title);
+            // Check if this content already exists in ANY status (pending, approved, rejected, archived)
+            // This prevents re-adding stories that were already processed
+            const isDuplicate = existingPosts.some(p =>
+                p.content === item.title ||
+                (p.sourceUrl && item.link && p.sourceUrl === item.link)
+            );
 
             if (!isDuplicate && item.title) {
                 // Default cricket placeholder
