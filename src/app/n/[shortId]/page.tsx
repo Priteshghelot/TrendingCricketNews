@@ -93,13 +93,40 @@ export default async function ShortLinkPage({ params }: Props) {
     // Find the full post ID
     const fullId = findPostByShortId(shortId);
 
-    if (fullId) {
-        // Redirect to full news page
-        redirect(`/news/${fullId}`);
-    } else {
+    if (!fullId) {
         // Post not found, redirect to homepage
         redirect('/');
     }
+
+    const post = getPostById(fullId);
+    const redirectUrl = `/news/${fullId}`;
+
+    // Return a page that shows metadata to crawlers but redirects humans
+    return (
+        <html>
+            <head>
+                {/* Meta refresh for browsers */}
+                <meta httpEquiv="refresh" content="0;url={redirectUrl}" />
+                {/* Canonical URL */}
+                <link rel="canonical" href={`https://cricktrend.vercel.app${redirectUrl}`} />
+            </head>
+            <body>
+                {/* Fallback content */}
+                <div style={{ padding: '2rem', textAlign: 'center' }}>
+                    <p>Redirecting to article...</p>
+                    <p>
+                        <a href={redirectUrl} style={{ color: '#3b82f6' }}>
+                            Click here if you are not redirected automatically
+                        </a>
+                    </p>
+                </div>
+                {/* Client-side redirect as backup */}
+                <script dangerouslySetInnerHTML={{
+                    __html: `window.location.href = '${redirectUrl}';`
+                }} />
+            </body>
+        </html>
+    );
 }
 
 // Generate static params for recent posts
