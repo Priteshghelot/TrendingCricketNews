@@ -11,8 +11,15 @@ export async function GET(request: Request) {
         posts = posts.filter((p) => p.status === status);
     }
 
-    // Sort by timestamp descending
-    posts.sort((a, b) => b.timestamp - a.timestamp);
+    // Sort by timestamp descending (newest first), then by ID for stable ordering
+    posts.sort((a, b) => {
+        // First, sort by timestamp (newest first)
+        if (b.timestamp !== a.timestamp) {
+            return b.timestamp - a.timestamp;
+        }
+        // If timestamps are equal, sort by ID (descending = newest first)
+        return b.id.localeCompare(a.id);
+    });
 
     return NextResponse.json({ posts });
 }
