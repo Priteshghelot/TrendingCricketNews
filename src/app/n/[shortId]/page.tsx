@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { Metadata } from 'next';
 import { getPosts, getPostById } from '@/lib/store';
 import { createShortId } from '@/lib/shortId';
+import ClientRedirect from '@/components/ClientRedirect';
 
 interface Props {
     params: Promise<{
@@ -57,7 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         openGraph: {
             title: seoTitle,
             description: metaDescription,
-            url: `https://cricktrend.vercel.app/n/${shortId}`,
+            url: `https://crictrend.vercel.app/n/${shortId}`,
             siteName: 'CricTrend',
             images: post.imageUrl ? [
                 {
@@ -68,7 +69,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
                 }
             ] : [
                 {
-                    url: 'https://cricktrend.vercel.app/images/default-news.jpg',
+                    url: 'https://crictrend.vercel.app/images/default-news.jpg',
                     width: 1200,
                     height: 630,
                     alt: 'CricTrend - Latest Cricket News',
@@ -82,7 +83,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             creator: '@crictrend',
             title: seoTitle,
             description: metaDescription,
-            images: post.imageUrl ? [post.imageUrl] : ['https://cricktrend.vercel.app/images/default-news.jpg'],
+            images: post.imageUrl ? [post.imageUrl] : ['https://crictrend.vercel.app/images/default-news.jpg'],
         },
     };
 }
@@ -98,35 +99,11 @@ export default async function ShortLinkPage({ params }: Props) {
         redirect('/');
     }
 
-    const post = getPostById(fullId);
     const redirectUrl = `/news/${fullId}`;
 
-    // Return a page that shows metadata to crawlers but redirects humans
-    return (
-        <html>
-            <head>
-                {/* Meta refresh for browsers */}
-                <meta httpEquiv="refresh" content="0;url={redirectUrl}" />
-                {/* Canonical URL */}
-                <link rel="canonical" href={`https://cricktrend.vercel.app${redirectUrl}`} />
-            </head>
-            <body>
-                {/* Fallback content */}
-                <div style={{ padding: '2rem', textAlign: 'center' }}>
-                    <p>Redirecting to article...</p>
-                    <p>
-                        <a href={redirectUrl} style={{ color: '#3b82f6' }}>
-                            Click here if you are not redirected automatically
-                        </a>
-                    </p>
-                </div>
-                {/* Client-side redirect as backup */}
-                <script dangerouslySetInnerHTML={{
-                    __html: `window.location.href = '${redirectUrl}';`
-                }} />
-            </body>
-        </html>
-    );
+    // Render the client redirect component
+    // The metadata will be injected into the head by the layout via generateMetadata
+    return <ClientRedirect url={redirectUrl} />;
 }
 
 // Generate static params for recent posts

@@ -35,8 +35,12 @@ export default function Home() {
         const data = await res.json();
         const newPosts = data.posts;
 
-        // Update state immediately
-        setPosts(newPosts);
+        // Update state only if data has changed to prevent re-renders/flashing
+        setPosts(prevPosts => {
+          const isDifferent = JSON.stringify(prevPosts) !== JSON.stringify(newPosts);
+          return isDifferent ? newPosts : prevPosts;
+        });
+
         if (!isBackground) setLoading(false);
 
         // Check for new posts and send notifications
