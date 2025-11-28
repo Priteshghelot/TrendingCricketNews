@@ -26,7 +26,15 @@ export default function BreakingNews({ posts }: BreakingNewsProps) {
                 clipPath: 'polygon(0 0, 100% 0, 90% 100%, 0% 100%)',
                 paddingRight: '2rem'
             }}>
-                <span className="blink" style={{ marginRight: '0.5rem' }}>🔴</span>
+                <span className="blink" style={{
+                    display: 'inline-block',
+                    width: '12px',
+                    height: '12px',
+                    backgroundColor: '#4ade80',
+                    borderRadius: '50%',
+                    border: '2px solid #000000',
+                    marginRight: '0.8rem'
+                }}></span>
                 BREAKING NEWS
             </div>
             <div className="marquee-wrapper" style={{ height: '3rem' }}>
