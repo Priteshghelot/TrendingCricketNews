@@ -2,36 +2,43 @@
 
 import React, { useState } from 'react';
 import { trackShare } from '@/lib/analytics';
+import { createShortId } from '@/lib/shortId';
 
 interface ShareButtonsProps {
     title: string;
     url: string;
+    postId?: string; // Optional post ID for generating short URL
 }
 
-export default function ShareButtons({ title, url }: ShareButtonsProps) {
+export default function ShareButtons({ title, url, postId }: ShareButtonsProps) {
     const [copied, setCopied] = useState(false);
 
+    // Use short URL if postId is provided
+    const shareUrl = postId
+        ? `https://cricktrend.vercel.app/n/${createShortId(postId)}`
+        : url;
+
     const shareOnTwitter = () => {
-        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(shareUrl)}`;
         window.open(twitterUrl, '_blank', 'width=600,height=400');
         trackShare('Twitter', title);
     };
 
     const shareOnFacebook = () => {
-        const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+        const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
         window.open(facebookUrl, '_blank', 'width=600,height=400');
         trackShare('Facebook', title);
     };
 
     const shareOnWhatsApp = () => {
-        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(title + ' ' + url)}`;
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(title + ' ' + shareUrl)}`;
         window.open(whatsappUrl, '_blank');
         trackShare('WhatsApp', title);
     };
 
     const copyLink = async () => {
         try {
-            await navigator.clipboard.writeText(url);
+            await navigator.clipboard.writeText(shareUrl);
             setCopied(true);
             trackShare('Copy Link', title);
             setTimeout(() => setCopied(false), 2000);

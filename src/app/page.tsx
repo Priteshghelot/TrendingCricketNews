@@ -339,6 +339,7 @@ export default function Home() {
               <ShareButtons
                 title={selectedPost.content}
                 url={`https://crictrend.vercel.app/news/${selectedPost.id}`}
+                postId={selectedPost.id}
               />
 
               {selectedPost.keywords && selectedPost.keywords.length > 0 && (
