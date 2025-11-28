@@ -83,7 +83,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             creator: '@crictrend',
             title: seoTitle,
             description: metaDescription,
-            images: post.imageUrl ? [post.imageUrl] : ['https://crictrend.vercel.app/images/default-news.jpg'],
+            images: post.imageUrl ? [{
+                url: post.imageUrl,
+                alt: post.content,
+            }] : ['https://crictrend.vercel.app/images/default-news.jpg'],
+        },
+        other: {
+            'twitter:domain': 'cricktrend.vercel.app',
+            'twitter:url': `https://cricktrend.vercel.app/n/${shortId}`,
         },
     };
 }

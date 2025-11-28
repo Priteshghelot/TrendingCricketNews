@@ -18,13 +18,13 @@ export default function BreakingNews({ posts }: BreakingNewsProps) {
         }}>
             <div className="breaking-label" style={{
                 background: '#ef4444',
-                padding: '0.5rem 1.5rem',
-                fontSize: '1.2rem',
+                padding: '0.75rem 2rem',
+                fontSize: '1.4rem',
                 fontWeight: '800',
                 textTransform: 'uppercase',
                 letterSpacing: '1px',
                 clipPath: 'polygon(0 0, 100% 0, 90% 100%, 0% 100%)',
-                paddingRight: '2rem'
+                paddingRight: '2.5rem'
             }}>
                 <span className="blink" style={{
                     display: 'inline-block',
@@ -37,16 +37,16 @@ export default function BreakingNews({ posts }: BreakingNewsProps) {
                 }}></span>
                 BREAKING NEWS
             </div>
-            <div className="marquee-wrapper" style={{ height: '3rem' }}>
-                <div className="marquee-content" style={{ alignItems: 'center' }}>
+            <div className="marquee-wrapper" style={{ height: '4rem' }}>
+                <div className="marquee-content" style={{ alignItems: 'center', animationDuration: '120s' }}>
                     {posts.map((post) => (
-                        <span key={post.id} className="marquee-item" style={{ fontSize: '1.1rem', fontWeight: '500' }}>
+                        <span key={post.id} className="marquee-item" style={{ fontSize: '1.3rem', fontWeight: '600' }}>
                             {post.content} •
                         </span>
                     ))}
                     {/* Duplicate for seamless loop */}
                     {posts.map((post) => (
-                        <span key={`dup-${post.id}`} className="marquee-item" style={{ fontSize: '1.1rem', fontWeight: '500' }}>
+                        <span key={`dup-${post.id}`} className="marquee-item" style={{ fontSize: '1.3rem', fontWeight: '600' }}>
                             {post.content} •
                         </span>
                     ))}

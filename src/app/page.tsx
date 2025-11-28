@@ -33,7 +33,16 @@ export default function Home() {
         // 1. Fetch existing posts immediately
         const res = await fetch('/api/posts?status=approved');
         const data = await res.json();
-        const newPosts = data.posts;
+        let newPosts = data.posts;
+
+        // Strict Client-Side Sorting: Ensure consistent order (Newest First)
+        // This prevents "flashing" or random reordering if API returns different order
+        newPosts.sort((a: Post, b: Post) => {
+          if (b.timestamp !== a.timestamp) {
+            return b.timestamp - a.timestamp;
+          }
+          return b.id.localeCompare(a.id);
+        });
 
         // Update state only if data has changed to prevent re-renders/flashing
         setPosts(prevPosts => {
