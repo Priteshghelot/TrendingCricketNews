@@ -1,4 +1,11 @@
 {
     "posts": [],
-    "scores": {}
+    "score": {
+        "teamA": "",
+        "teamB": "",
+        "scoreA": "",
+        "scoreB": "",
+        "status": "",
+        "matchTitle": ""
+    }
 }
