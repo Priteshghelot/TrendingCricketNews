@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { getPublishedPosts, getScore } from '@/lib/store';
 import AdSense from '@/components/AdSense';
 import BreakingNews from '@/components/BreakingNews';
 import SchemaOrg from '@/components/SchemaOrg';

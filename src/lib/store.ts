@@ -118,6 +118,12 @@ export function getPosts(): Post[] {
     return globalPosts;
 }
 
+// STRICT FILTER: Only return posts that are approved AND have original body content
+export function getPublishedPosts(): Post[] {
+    const posts = getPosts();
+    return posts.filter(p => p.status === 'approved' && p.body && p.body.trim().length > 0);
+}
+
 export function getPostById(id: string): Post | undefined {
     const posts = getPosts();
     const post = posts.find((p) => p.id === id);

@@ -126,206 +126,243 @@ export default function AdminPage() {
     };
 
     useEffect(() => {
-        fetchPosts();
-        fetchScore();
-    }, []);
+        setEditingPost({
+            id: '', // Empty ID signals new post
+            content: '',
+            highlights: '',
+            body: '',
+            imageUrl: ''
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }}
+className = "btn"
+style = {{ background: '#10b981', color: 'white', padding: '0.8rem 1.5rem', fontSize: '1.1rem' }}
+                    >
+                        ➕ Create New Article
+                    </button >
+                </div >
 
-    return (
-        <div className="container">
-            <AnalyticsViewer />
+    { editingPost && (
+        <div className="card" style={{ padding: '2rem', marginBottom: '3rem', border: '2px solid var(--primary)' }}>
+            <h2 style={{ marginBottom: '1.5rem', color: 'var(--primary)' }}>
+                {editingPost.id ? '✏️ Editing Post' : '📝 Create New Article'}
+            </h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>Headline</label>
+                    <input
+                        value={editingPost.content}
+                        onChange={e => setEditingPost({ ...editingPost, content: e.target.value })}
+                        style={{ width: '100%', padding: '0.8rem', background: '#1e293b', border: '1px solid #334155', color: 'white', borderRadius: '4px' }}
+                    />
+                </div>
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>Image URL</label>
+                    <input
+                        value={editingPost.imageUrl}
+                        onChange={e => setEditingPost({ ...editingPost, imageUrl: e.target.value })}
+                        style={{ width: '100%', padding: '0.8rem', background: '#1e293b', border: '1px solid #334155', color: 'white', borderRadius: '4px' }}
+                    />
+                </div>
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>Highlights (Short Summary)</label>
+                    <textarea
+                        value={editingPost.highlights}
+                        onChange={e => setEditingPost({ ...editingPost, highlights: e.target.value })}
+                        style={{ width: '100%', height: '100px', padding: '0.8rem', background: '#1e293b', border: '1px solid #334155', color: 'white', borderRadius: '4px' }}
+                    />
+                </div>
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>Article Body (Original Content)</label>
+                    <textarea
+                        value={editingPost.body}
+                        onChange={e => setEditingPost({ ...editingPost, body: e.target.value })}
+                        style={{ width: '100%', height: '300px', padding: '0.8rem', background: '#1e293b', border: '1px solid #334155', color: 'white', borderRadius: '4px', fontFamily: 'monospace' }}
+                        placeholder="Write your original article here..."
+                    />
+                </div>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button
+                        onClick={async () => {
+                            if (!editingPost.id) {
+                                // Create New
+                                try {
+                                    await fetch('/api/posts', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                            content: editingPost.content,
+                                            highlights: editingPost.highlights,
+                                            body: editingPost.body,
+                                            imageUrl: editingPost.imageUrl,
+                                            status: 'approved'
+                                        }),
+                                    });
+                                    fetchPosts();
+                                    setEditingPost(null);
+                                } catch (e) {
+                                    console.error(e);
+                                    alert('Failed to create post');
+                                }
+                            } else {
+                                // Update Existing
+                                handleAction(editingPost.id, 'approved');
+                            }
+                        }}
+                        className="btn btn-success"
+                        style={{ flex: 1 }}
+                    >
+                        {editingPost.id ? '✅ Save & Approve' : '🚀 Publish Now'}
+                    </button>
+                    <button
+                        onClick={() => setEditingPost(null)}
+                        className="btn"
+                        style={{ flex: 1, background: '#64748b' }}
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    )}
 
-            {editingPost && (
-                <div className="card" style={{ padding: '2rem', marginBottom: '3rem', border: '2px solid var(--primary)' }}>
-                    <h2 style={{ marginBottom: '1.5rem', color: 'var(--primary)' }}>✏️ Editing Post</h2>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem' }}>Headline</label>
-                            <input
-                                value={editingPost.content}
-                                onChange={e => setEditingPost({ ...editingPost, content: e.target.value })}
-                                style={{ width: '100%', padding: '0.8rem', background: '#1e293b', border: '1px solid #334155', color: 'white', borderRadius: '4px' }}
+                <div className="card" style={{ padding: '2rem', marginBottom: '3rem' }}>
+                    <h2 style={{ marginBottom: '1.5rem' }}>Live Score Manager</h2>
+                    <form onSubmit={updateScore} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <input
+                            placeholder="Match Title (e.g. IND vs AUS)"
+                            value={score?.matchTitle || ''}
+                            onChange={e => setScore({ ...score, matchTitle: e.target.value })}
+                            style={{ gridColumn: '1 / -1', padding: '0.5rem' }}
+                        />
+                        <input
+                            placeholder="Team A"
+                            value={score?.teamA || ''}
+                            onChange={e => setScore({ ...score, teamA: e.target.value })}
+                            style={{ padding: '0.5rem' }}
+                        />
+                        <input
+                            placeholder="Team B"
+                            value={score?.teamB || ''}
+                            onChange={e => setScore({ ...score, teamB: e.target.value })}
+                            style={{ padding: '0.5rem' }}
+                        />
+                        <input
+                            placeholder="Score A"
+                            value={score?.scoreA || ''}
+                            onChange={e => setScore({ ...score, scoreA: e.target.value })}
+                            style={{ padding: '0.5rem' }}
+                        />
+                        <input
+                            placeholder="Score B"
+                            value={score?.scoreB || ''}
+                            onChange={e => setScore({ ...score, scoreB: e.target.value })}
+                            style={{ padding: '0.5rem' }}
+                        />
+                        <input
+                            placeholder="Status (e.g. Live)"
+                            value={score?.status || ''}
+                            onChange={e => setScore({ ...score, status: e.target.value })}
+                            style={{ gridColumn: '1 / -1', padding: '0.5rem' }}
+                        />
+                        <button type="submit" className="btn btn-primary" style={{ gridColumn: '1 / -1' }}>
+                            Update Live Score
+                        </button>
+                    </form>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', gap: '1rem', flexWrap: 'wrap' }}>
+                    <h1>Pending News</h1>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                        <a
+                            href="/admin/analytics"
+                            className="btn"
+                            style={{ background: '#8b5cf6', color: 'white' }}
+                        >
+                            📊 View Analytics
+                        </a>
+                        <button
+                            onClick={async () => {
+                                if (confirm('Clean up posts older than 30 days?')) {
+                                    const res = await fetch('/api/cleanup', { method: 'POST' });
+                                    const data = await res.json();
+                                    alert(`${data.message}\nRemaining posts: ${data.remainingPosts}`);
+                                    fetchPosts();
+                                }
+                            }}
+                            className="btn"
+                            style={{ background: '#f59e0b', color: 'white' }}
+                        >
+                            🧹 Cleanup Old Posts
+                        </button>
+                        <button onClick={fetchNewTrends} className="btn btn-primary">
+                            Fetch Cricket News (RSS)
+                        </button>
+                    </div>
+                </div>
+
+{
+    loading ? (
+        <p>Loading pending posts...</p>
+    ) : posts.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '4rem', color: '#888' }}>
+            <p>No pending posts. Fetch some trends!</p>
+        </div>
+    ) : (
+        <div className="grid">
+            {posts.map((post) => (
+                <div key={post.id} className="card animate-fade-in">
+                    {post.imageUrl && (
+                        <div style={{ height: '200px', overflow: 'hidden' }}>
+                            <img
+                                src={post.imageUrl}
+                                alt="Trend"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             />
                         </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem' }}>Image URL</label>
-                            <input
-                                value={editingPost.imageUrl}
-                                onChange={e => setEditingPost({ ...editingPost, imageUrl: e.target.value })}
-                                style={{ width: '100%', padding: '0.8rem', background: '#1e293b', border: '1px solid #334155', color: 'white', borderRadius: '4px' }}
-                            />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem' }}>Highlights (Short Summary)</label>
-                            <textarea
-                                value={editingPost.highlights}
-                                onChange={e => setEditingPost({ ...editingPost, highlights: e.target.value })}
-                                style={{ width: '100%', height: '100px', padding: '0.8rem', background: '#1e293b', border: '1px solid #334155', color: 'white', borderRadius: '4px' }}
-                            />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem' }}>Article Body (Original Content)</label>
-                            <textarea
-                                value={editingPost.body}
-                                onChange={e => setEditingPost({ ...editingPost, body: e.target.value })}
-                                style={{ width: '100%', height: '300px', padding: '0.8rem', background: '#1e293b', border: '1px solid #334155', color: 'white', borderRadius: '4px', fontFamily: 'monospace' }}
-                                placeholder="Write your original article here..."
-                            />
+                    )}
+                    <div style={{ padding: '1.5rem' }}>
+                        <p style={{ marginBottom: '1.5rem', lineHeight: '1.6' }}>{post.content}</p>
+                        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                            <button
+                                onClick={() => startEditing(post)}
+                                className="btn"
+                                style={{ flex: 1, background: '#3b82f6' }}
+                            >
+                                ✏️ Edit & Rewrite
+                            </button>
                         </div>
                         <div style={{ display: 'flex', gap: '1rem' }}>
                             <button
-                                onClick={() => handleAction(editingPost.id, 'approved')}
+                                onClick={() => handleAction(post.id, 'approved')}
                                 className="btn btn-success"
                                 style={{ flex: 1 }}
                             >
-                                ✅ Save & Approve
+                                Approve
                             </button>
                             <button
-                                onClick={() => setEditingPost(null)}
-                                className="btn"
-                                style={{ flex: 1, background: '#64748b' }}
+                                onClick={() => handleAction(post.id, 'rejected')}
+                                className="btn btn-danger"
+                                style={{ flex: 1 }}
                             >
-                                Cancel
+                                Reject
+                            </button>
+                        </div>
+                        <div style={{ marginTop: '1rem' }}>
+                            <button
+                                onClick={() => handleDelete(post.id)}
+                                className="btn btn-danger"
+                                style={{ width: '100%', background: '#ef4444' }}
+                            >
+                                Delete Post
                             </button>
                         </div>
                     </div>
                 </div>
-            )}
-
-            <div className="card" style={{ padding: '2rem', marginBottom: '3rem' }}>
-                <h2 style={{ marginBottom: '1.5rem' }}>Live Score Manager</h2>
-                <form onSubmit={updateScore} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <input
-                        placeholder="Match Title (e.g. IND vs AUS)"
-                        value={score?.matchTitle || ''}
-                        onChange={e => setScore({ ...score, matchTitle: e.target.value })}
-                        style={{ gridColumn: '1 / -1', padding: '0.5rem' }}
-                    />
-                    <input
-                        placeholder="Team A"
-                        value={score?.teamA || ''}
-                        onChange={e => setScore({ ...score, teamA: e.target.value })}
-                        style={{ padding: '0.5rem' }}
-                    />
-                    <input
-                        placeholder="Team B"
-                        value={score?.teamB || ''}
-                        onChange={e => setScore({ ...score, teamB: e.target.value })}
-                        style={{ padding: '0.5rem' }}
-                    />
-                    <input
-                        placeholder="Score A"
-                        value={score?.scoreA || ''}
-                        onChange={e => setScore({ ...score, scoreA: e.target.value })}
-                        style={{ padding: '0.5rem' }}
-                    />
-                    <input
-                        placeholder="Score B"
-                        value={score?.scoreB || ''}
-                        onChange={e => setScore({ ...score, scoreB: e.target.value })}
-                        style={{ padding: '0.5rem' }}
-                    />
-                    <input
-                        placeholder="Status (e.g. Live)"
-                        value={score?.status || ''}
-                        onChange={e => setScore({ ...score, status: e.target.value })}
-                        style={{ gridColumn: '1 / -1', padding: '0.5rem' }}
-                    />
-                    <button type="submit" className="btn btn-primary" style={{ gridColumn: '1 / -1' }}>
-                        Update Live Score
-                    </button>
-                </form>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', gap: '1rem', flexWrap: 'wrap' }}>
-                <h1>Pending News</h1>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <a
-                        href="/admin/analytics"
-                        className="btn"
-                        style={{ background: '#8b5cf6', color: 'white' }}
-                    >
-                        📊 View Analytics
-                    </a>
-                    <button
-                        onClick={async () => {
-                            if (confirm('Clean up posts older than 30 days?')) {
-                                const res = await fetch('/api/cleanup', { method: 'POST' });
-                                const data = await res.json();
-                                alert(`${data.message}\nRemaining posts: ${data.remainingPosts}`);
-                                fetchPosts();
-                            }
-                        }}
-                        className="btn"
-                        style={{ background: '#f59e0b', color: 'white' }}
-                    >
-                        🧹 Cleanup Old Posts
-                    </button>
-                    <button onClick={fetchNewTrends} className="btn btn-primary">
-                        Fetch Cricket News (RSS)
-                    </button>
-                </div>
-            </div>
-
-            {loading ? (
-                <p>Loading pending posts...</p>
-            ) : posts.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '4rem', color: '#888' }}>
-                    <p>No pending posts. Fetch some trends!</p>
-                </div>
-            ) : (
-                <div className="grid">
-                    {posts.map((post) => (
-                        <div key={post.id} className="card animate-fade-in">
-                            {post.imageUrl && (
-                                <div style={{ height: '200px', overflow: 'hidden' }}>
-                                    <img
-                                        src={post.imageUrl}
-                                        alt="Trend"
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                    />
-                                </div>
-                            )}
-                            <div style={{ padding: '1.5rem' }}>
-                                <p style={{ marginBottom: '1.5rem', lineHeight: '1.6' }}>{post.content}</p>
-                                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-                                    <button
-                                        onClick={() => startEditing(post)}
-                                        className="btn"
-                                        style={{ flex: 1, background: '#3b82f6' }}
-                                    >
-                                        ✏️ Edit & Rewrite
-                                    </button>
-                                </div>
-                                <div style={{ display: 'flex', gap: '1rem' }}>
-                                    <button
-                                        onClick={() => handleAction(post.id, 'approved')}
-                                        className="btn btn-success"
-                                        style={{ flex: 1 }}
-                                    >
-                                        Approve
-                                    </button>
-                                    <button
-                                        onClick={() => handleAction(post.id, 'rejected')}
-                                        className="btn btn-danger"
-                                        style={{ flex: 1 }}
-                                    >
-                                        Reject
-                                    </button>
-                                </div>
-                                <div style={{ marginTop: '1rem' }}>
-                                    <button
-                                        onClick={() => handleDelete(post.id)}
-                                        className="btn btn-danger"
-                                        style={{ width: '100%', background: '#ef4444' }}
-                                    >
-                                        Delete Post
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+            ))}
         </div>
-    );
+    )
+}
+            </div >
+            );
 }
