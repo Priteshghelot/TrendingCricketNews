@@ -12,6 +12,7 @@ export interface Post {
     sourceUrl?: string;
     highlights?: string;
     keywords?: string[];
+    body?: string; // Full article content for original reporting
 }
 
 export interface Batsman {
@@ -143,7 +144,7 @@ export function addPost(post: Post) {
     }
 }
 
-export function updatePostStatus(id: string, status: Post['status'], updateTimestamp: boolean = false) {
+export function updatePostStatus(id: string, status: Post['status'], updateTimestamp: boolean = false, updates?: Partial<Post>) {
     const posts = getPosts();
     const post = posts.find((p) => p.id === id);
     if (post) {
@@ -151,6 +152,13 @@ export function updatePostStatus(id: string, status: Post['status'], updateTimes
         // Update timestamp when approving so it appears first
         if (updateTimestamp) {
             post.timestamp = Date.now();
+        }
+        // Apply other updates if provided
+        if (updates) {
+            if (updates.content) post.content = updates.content;
+            if (updates.highlights) post.highlights = updates.highlights;
+            if (updates.body) post.body = updates.body;
+            if (updates.imageUrl) post.imageUrl = updates.imageUrl;
         }
         savePosts(posts);
     }

@@ -10,6 +10,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
         '',
         '/live',
         '/archive',
+        '/about',
+        '/contact',
+        '/privacy-policy',
+        '/terms-of-service',
     ].map((route) => ({
         url: `${baseUrl}${route}`,
         lastModified: new Date().toISOString(),

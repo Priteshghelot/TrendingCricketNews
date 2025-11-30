@@ -9,11 +9,22 @@ interface Post {
     imageUrl?: string;
     status: 'pending' | 'approved' | 'rejected' | 'archived';
     timestamp: number;
+    highlights?: string;
+    body?: string;
+}
+
+interface EditState {
+    id: string;
+    content: string;
+    highlights: string;
+    body: string;
+    imageUrl: string;
 }
 
 export default function AdminPage() {
     const [posts, setPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
+    const [editingPost, setEditingPost] = useState<EditState | null>(null);
     const [score, setScore] = useState({
         teamA: '', teamB: '', scoreA: '', scoreB: '', status: '', matchTitle: ''
     });
@@ -68,16 +79,38 @@ export default function AdminPage() {
 
     const handleAction = async (id: string, status: 'approved' | 'rejected') => {
         try {
+            // If approving, send the current edited state if it matches the ID
+            const updates = editingPost && editingPost.id === id ? {
+                content: editingPost.content,
+                highlights: editingPost.highlights,
+                body: editingPost.body,
+                imageUrl: editingPost.imageUrl
+            } : {};
+
             await fetch('/api/posts', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, status }),
+                body: JSON.stringify({ id, status, ...updates }),
             });
-            // Remove from local state
+
+            // Remove from local state and clear edit mode
             setPosts(posts.filter(p => p.id !== id));
+            if (editingPost?.id === id) setEditingPost(null);
         } catch (error) {
             console.error('Failed to update post', error);
         }
+    };
+
+    const startEditing = (post: Post) => {
+        setEditingPost({
+            id: post.id,
+            content: post.content,
+            highlights: post.highlights || '',
+            body: post.body || '',
+            imageUrl: post.imageUrl || ''
+        });
+        // Scroll to top or modal
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleDelete = async (id: string) => {
@@ -100,6 +133,63 @@ export default function AdminPage() {
     return (
         <div className="container">
             <AnalyticsViewer />
+
+            {editingPost && (
+                <div className="card" style={{ padding: '2rem', marginBottom: '3rem', border: '2px solid var(--primary)' }}>
+                    <h2 style={{ marginBottom: '1.5rem', color: 'var(--primary)' }}>✏️ Editing Post</h2>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '0.5rem' }}>Headline</label>
+                            <input
+                                value={editingPost.content}
+                                onChange={e => setEditingPost({ ...editingPost, content: e.target.value })}
+                                style={{ width: '100%', padding: '0.8rem', background: '#1e293b', border: '1px solid #334155', color: 'white', borderRadius: '4px' }}
+                            />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '0.5rem' }}>Image URL</label>
+                            <input
+                                value={editingPost.imageUrl}
+                                onChange={e => setEditingPost({ ...editingPost, imageUrl: e.target.value })}
+                                style={{ width: '100%', padding: '0.8rem', background: '#1e293b', border: '1px solid #334155', color: 'white', borderRadius: '4px' }}
+                            />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '0.5rem' }}>Highlights (Short Summary)</label>
+                            <textarea
+                                value={editingPost.highlights}
+                                onChange={e => setEditingPost({ ...editingPost, highlights: e.target.value })}
+                                style={{ width: '100%', height: '100px', padding: '0.8rem', background: '#1e293b', border: '1px solid #334155', color: 'white', borderRadius: '4px' }}
+                            />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '0.5rem' }}>Article Body (Original Content)</label>
+                            <textarea
+                                value={editingPost.body}
+                                onChange={e => setEditingPost({ ...editingPost, body: e.target.value })}
+                                style={{ width: '100%', height: '300px', padding: '0.8rem', background: '#1e293b', border: '1px solid #334155', color: 'white', borderRadius: '4px', fontFamily: 'monospace' }}
+                                placeholder="Write your original article here..."
+                            />
+                        </div>
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            <button
+                                onClick={() => handleAction(editingPost.id, 'approved')}
+                                className="btn btn-success"
+                                style={{ flex: 1 }}
+                            >
+                                ✅ Save & Approve
+                            </button>
+                            <button
+                                onClick={() => setEditingPost(null)}
+                                className="btn"
+                                style={{ flex: 1, background: '#64748b' }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="card" style={{ padding: '2rem', marginBottom: '3rem' }}>
                 <h2 style={{ marginBottom: '1.5rem' }}>Live Score Manager</h2>
@@ -197,6 +287,15 @@ export default function AdminPage() {
                             )}
                             <div style={{ padding: '1.5rem' }}>
                                 <p style={{ marginBottom: '1.5rem', lineHeight: '1.6' }}>{post.content}</p>
+                                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                                    <button
+                                        onClick={() => startEditing(post)}
+                                        className="btn"
+                                        style={{ flex: 1, background: '#3b82f6' }}
+                                    >
+                                        ✏️ Edit & Rewrite
+                                    </button>
+                                </div>
                                 <div style={{ display: 'flex', gap: '1rem' }}>
                                     <button
                                         onClick={() => handleAction(post.id, 'approved')}

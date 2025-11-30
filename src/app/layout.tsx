@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Outfit } from 'next/font/google';
 import MobileNav from '@/components/MobileNav';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
+import Footer from '@/components/Footer';
 
 const outfit = Outfit({ subsets: ['latin'] });
 
@@ -145,6 +146,7 @@ export default function RootLayout({
         <main style={{ minHeight: 'calc(100vh - 80px)' }}>
           {children}
         </main>
+        <Footer />
       </body>
     </html>
   );

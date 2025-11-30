@@ -26,14 +26,19 @@ export async function GET(request: Request) {
 
 export async function PUT(request: Request) {
     try {
-        const body = await request.json();
-        const { id, status } = body;
+        const bodyData = await request.json();
+        const { id, status, content, highlights, body, imageUrl } = bodyData;
 
         if (!id || !status) {
             return NextResponse.json({ error: 'Missing id or status' }, { status: 400 });
         }
 
-        updatePostStatus(id, status as Post['status'], status === 'approved');
+        updatePostStatus(id, status as Post['status'], status === 'approved', {
+            content,
+            highlights,
+            body,
+            imageUrl
+        });
 
         return NextResponse.json({ success: true });
     } catch (error) {
