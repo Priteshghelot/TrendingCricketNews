@@ -322,9 +322,6 @@ export default function AdminPage() {
                     >
                         🧹 Cleanup Old Posts
                     </button>
-                    <button onClick={fetchNewTrends} className="btn btn-primary">
-                        Fetch Cricket News (RSS)
-                    </button>
                 </div>
             </div>
 
