@@ -201,8 +201,13 @@ export default function Home() {
                       {post.content}
                     </p>
                     {post.highlights && (
-                      <p style={{ fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)', lineHeight: '1.5', color: '#94a3b8', marginBottom: '1rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      <p style={{ fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)', lineHeight: '1.5', color: '#94a3b8', marginBottom: '0.5rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                         {post.highlights}
+                      </p>
+                    )}
+                    {post.body && (
+                      <p style={{ fontSize: 'clamp(0.8rem, 1.6vw, 0.9rem)', lineHeight: '1.5', color: '#cbd5e1', marginBottom: '1rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {post.body}
                       </p>
                     )}
                     <span style={{ fontSize: 'clamp(0.75rem, 1.5vw, 0.85rem)', color: '#64748b' }}>
