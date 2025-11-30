@@ -199,9 +199,14 @@ export default function Home() {
                     </div>
                   )}
                   <div style={{ padding: 'clamp(1rem, 3vw, 2rem)' }}>
-                    <p style={{ fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', lineHeight: '1.6', marginBottom: '1rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    <p style={{ fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', lineHeight: '1.6', marginBottom: '0.5rem', fontWeight: '600', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                       {post.content}
                     </p>
+                    {post.highlights && (
+                      <p style={{ fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)', lineHeight: '1.5', color: '#94a3b8', marginBottom: '1rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {post.highlights}
+                      </p>
+                    )}
                     <span style={{ fontSize: 'clamp(0.75rem, 1.5vw, 0.85rem)', color: '#64748b' }}>
                       {new Date(post.timestamp).toLocaleDateString()}
                     </span>
