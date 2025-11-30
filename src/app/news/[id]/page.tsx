@@ -184,16 +184,10 @@ export default async function NewsPage({ params }: Props) {
                 </div>
 
                 <div style={{ fontSize: '1.1rem', lineHeight: '1.8', color: '#e2e8f0' }}>
-                    {post.highlights ? (
+                    {post.highlights && (
                         <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '8px', marginBottom: '2rem', borderLeft: '4px solid var(--primary)' }}>
                             <h3 style={{ marginTop: 0, color: 'var(--primary)', fontSize: '1rem', textTransform: 'uppercase' }}>Highlights</h3>
                             <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{post.highlights}</p>
-                        </div>
-                    ) : (
-                        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '8px', marginBottom: '2rem', borderLeft: '4px solid var(--primary)' }}>
-                            <p style={{ margin: 0, fontStyle: 'italic', color: '#94a3b8' }}>
-                                Full details for this story are available on the source website.
-                            </p>
                         </div>
                     )}
 

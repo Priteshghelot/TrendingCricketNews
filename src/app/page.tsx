@@ -321,12 +321,8 @@ export default function Home() {
                 color: '#e2e8f0',
                 marginBottom: '2rem'
               }}>
-                {selectedPost.highlights ? (
+                {selectedPost.highlights && (
                   <p style={{ whiteSpace: 'pre-wrap' }}>{selectedPost.highlights}</p>
-                ) : (
-                  <p style={{ fontStyle: 'italic', color: '#94a3b8' }}>
-                    Full details for this story are available on the source website. Click the button below to read more.
-                  </p>
                 )}
               </div>
 
