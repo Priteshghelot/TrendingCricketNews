@@ -80,7 +80,8 @@ let isFsAvailable = true;
 try {
     if (fs.existsSync(DATA_FILE)) {
         const data = fs.readFileSync(DATA_FILE, 'utf-8');
-        globalPosts = JSON.parse(data);
+        const parsed = JSON.parse(data);
+        globalPosts = parsed.posts || [];
     }
 } catch (error) {
     console.warn('File system not available or readable, using in-memory store:', error);
@@ -95,7 +96,11 @@ function savePosts(posts: Post[]) {
             if (!fs.existsSync(dir)) {
                 fs.mkdirSync(dir, { recursive: true });
             }
-            fs.writeFileSync(DATA_FILE, JSON.stringify(posts, null, 2));
+            const dataToSave = {
+                posts: posts,
+                score: globalScore
+            };
+            fs.writeFileSync(DATA_FILE, JSON.stringify(dataToSave, null, 2));
         } catch (error) {
             console.warn('Error saving posts to file (likely read-only FS), data will be lost on restart:', error);
             isFsAvailable = false;
@@ -109,7 +114,8 @@ export function getPosts(): Post[] {
         try {
             if (fs.existsSync(DATA_FILE)) {
                 const data = fs.readFileSync(DATA_FILE, 'utf-8');
-                return JSON.parse(data);
+                const parsed = JSON.parse(data);
+                return parsed.posts || [];
             }
         } catch (error) {
             console.warn('Error reading posts file, returning in-memory:', error);
