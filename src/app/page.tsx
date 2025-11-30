@@ -20,6 +20,7 @@ interface Post {
   sourceUrl?: string;
   highlights?: string;
   keywords?: string[];
+  body?: string;
 }
 
 export default function Home() {
