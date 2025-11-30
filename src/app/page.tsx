@@ -64,14 +64,12 @@ export default function Home() {
 
         previousPostIds.current = new Set(newPosts.map((p: Post) => p.id));
 
-        // 2. Trigger background news fetch (non-blocking)
-        // Only do this on initial load or if explicitly requested
-        if (!isBackground) {
-          fetch('/api/cron/news').then(() => {
-            // After background fetch is done, refresh posts silently
-            fetchPosts(true);
-          }).catch(console.error);
-        }
+        // DISABLED: Automatic news fetching removed for manual-only content
+        // if (!isBackground) {
+        //   fetch('/api/cron/news').then(() => {
+        //     fetchPosts(true);
+        //   }).catch(console.error);
+        // }
 
       } catch (error) {
         console.error('Failed to fetch posts', error);
