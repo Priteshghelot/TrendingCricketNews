@@ -192,11 +192,11 @@ export default async function NewsPage({ params }: Props) {
                     )}
 
                     {post.body ? (
-                        <div style={{ whiteSpace: 'pre-wrap', marginBottom: '2rem' }}>
+                        <div style={{ whiteSpace: 'pre-wrap', marginBottom: '2rem', fontSize: '1.05rem', lineHeight: '1.9' }}>
                             {post.body}
                         </div>
                     ) : (
-                        <p>{post.content}</p>
+                        <p style={{ marginBottom: '2rem' }}>{post.content}</p>
                     )}
 
                     {post.sourceUrl && (
