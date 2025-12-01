@@ -28,8 +28,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [newPost, setNewPost] = useState({ content: '', body: '', imageUrl: '' });
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorData, setEditorData] = useState({ id: '', content: '', body: '', imageUrl: '' });
   const previousPostIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -95,40 +95,61 @@ export default function Home() {
     checkAdmin();
   }, []);
 
-  const handleCreatePost = async () => {
-    if (!newPost.content) return alert('Headline is required');
+  const handleSavePost = async () => {
+    if (!editorData.content) return alert('Headline is required');
 
     try {
-      const res = await fetch('/api/posts', {
-        method: 'POST',
+      const isEditing = !!editorData.id;
+      const url = '/api/posts';
+      const method = isEditing ? 'PUT' : 'POST';
+
+      const body = {
+        ...editorData,
+        status: 'approved',
+        highlights: editorData.body.substring(0, 150) + '...'
+      };
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...newPost,
-          status: 'approved',
-          highlights: newPost.body.substring(0, 150) + '...'
-        })
+        body: JSON.stringify(body)
       });
 
       if (res.ok) {
-        alert('Post published successfully!');
-        setIsCreating(false);
-        setNewPost({ content: '', body: '', imageUrl: '' });
-        // Refresh posts immediately
+        alert(isEditing ? 'Post updated successfully!' : 'Post published successfully!');
+        setEditorOpen(false);
+        setEditorData({ id: '', content: '', body: '', imageUrl: '' });
+
+        // Refresh posts
         const refreshRes = await fetch('/api/posts?status=approved');
         const data = await refreshRes.json();
         setPosts(data.posts.sort((a: Post, b: Post) => b.timestamp - a.timestamp));
       } else {
-        alert('Failed to publish post');
+        alert('Failed to save post');
       }
     } catch (error) {
-      console.error('Error creating post:', error);
-      alert('Error creating post');
+      console.error('Error saving post:', error);
+      alert('Error saving post');
     }
+  };
+
+  const openEditor = (post?: Post) => {
+    if (post) {
+      setEditorData({
+        id: post.id,
+        content: post.content,
+        body: post.body || '',
+        imageUrl: post.imageUrl || ''
+      });
+    } else {
+      setEditorData({ id: '', content: '', body: '', imageUrl: '' });
+    }
+    setEditorOpen(true);
   };
 
   // Prevent body scroll when modal is open
   useEffect(() => {
-    if (selectedPost || isCreating) {
+    if (selectedPost || editorOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -136,7 +157,7 @@ export default function Home() {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [selectedPost, isCreating]);
+  }, [selectedPost, editorOpen]);
 
   // Show all approved posts (not just recent 24h)
   const approvedPosts = posts;
@@ -182,7 +203,7 @@ export default function Home() {
 
         {isAdmin && (
           <button
-            onClick={() => setIsCreating(true)}
+            onClick={() => openEditor()}
             style={{
               marginTop: '1rem',
               background: '#10b981',
@@ -275,6 +296,28 @@ export default function Home() {
                       <span style={{ fontSize: 'clamp(0.75rem, 1.5vw, 0.85rem)', color: '#64748b' }}>
                         {new Date(post.timestamp).toLocaleDateString()}
                       </span>
+                      {isAdmin && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditor(post);
+                          }}
+                          style={{
+                            background: '#3b82f6',
+                            color: 'white',
+                            border: 'none',
+                            padding: '0.4rem 0.8rem',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem',
+                            cursor: 'pointer',
+                            transition: 'background 0.2s'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#2563eb'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = '#3b82f6'}
+                        >
+                          ✏️ Edit
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -295,8 +338,8 @@ export default function Home() {
         </div>
       )}
 
-      {/* Create Post Modal */}
-      {isCreating && (
+      {/* Editor Modal */}
+      {editorOpen && (
         <div
           style={{
             position: 'fixed',
@@ -308,7 +351,7 @@ export default function Home() {
             justifyContent: 'center',
             padding: '1rem'
           }}
-          onClick={() => setIsCreating(false)}
+          onClick={() => setEditorOpen(false)}
         >
           <div
             style={{
@@ -321,13 +364,15 @@ export default function Home() {
             }}
             onClick={e => e.stopPropagation()}
           >
-            <h2 style={{ marginBottom: '1.5rem', color: 'white' }}>📝 Write New Article</h2>
+            <h2 style={{ marginBottom: '1.5rem', color: 'white' }}>
+              {editorData.id ? '✏️ Edit Article' : '📝 Write New Article'}
+            </h2>
 
             <div style={{ marginBottom: '1rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Headline</label>
               <input
-                value={newPost.content}
-                onChange={e => setNewPost({ ...newPost, content: e.target.value })}
+                value={editorData.content}
+                onChange={e => setEditorData({ ...editorData, content: e.target.value })}
                 placeholder="Enter catchy headline..."
                 style={{ width: '100%', padding: '0.8rem', background: '#0f172a', border: '1px solid #334155', color: 'white', borderRadius: '6px' }}
               />
@@ -336,8 +381,8 @@ export default function Home() {
             <div style={{ marginBottom: '1rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Image URL</label>
               <input
-                value={newPost.imageUrl}
-                onChange={e => setNewPost({ ...newPost, imageUrl: e.target.value })}
+                value={editorData.imageUrl}
+                onChange={e => setEditorData({ ...editorData, imageUrl: e.target.value })}
                 placeholder="https://..."
                 style={{ width: '100%', padding: '0.8rem', background: '#0f172a', border: '1px solid #334155', color: 'white', borderRadius: '6px' }}
               />
@@ -346,8 +391,8 @@ export default function Home() {
             <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Article Body</label>
               <textarea
-                value={newPost.body}
-                onChange={e => setNewPost({ ...newPost, body: e.target.value })}
+                value={editorData.body}
+                onChange={e => setEditorData({ ...editorData, body: e.target.value })}
                 placeholder="Write your story here..."
                 style={{ width: '100%', height: '200px', padding: '0.8rem', background: '#0f172a', border: '1px solid #334155', color: 'white', borderRadius: '6px', resize: 'vertical' }}
               />
@@ -355,13 +400,13 @@ export default function Home() {
 
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button
-                onClick={handleCreatePost}
+                onClick={handleSavePost}
                 style={{ flex: 1, padding: '0.8rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}
               >
-                Publish Now
+                {editorData.id ? 'Save Changes' : 'Publish Now'}
               </button>
               <button
-                onClick={() => setIsCreating(false)}
+                onClick={() => setEditorOpen(false)}
                 style={{ flex: 1, padding: '0.8rem', background: '#475569', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}
               >
                 Cancel
