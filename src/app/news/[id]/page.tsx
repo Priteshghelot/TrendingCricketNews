@@ -14,7 +14,7 @@ interface Props {
 
 // Generate static paths for the most recent 200 posts
 export async function generateStaticParams() {
-    const posts = getPosts();
+    const posts = await getPosts();
     // Get recent approved posts (limit to 200 for build performance)
     const recentPosts = posts
         .filter(p => p.status === 'approved')

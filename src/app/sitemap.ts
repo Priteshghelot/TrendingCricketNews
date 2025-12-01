@@ -1,8 +1,8 @@
 import { MetadataRoute } from 'next';
 import { getPosts } from '@/lib/store';
 
-export default function sitemap(): MetadataRoute.Sitemap {
-    const posts = getPosts();
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+    const posts = await getPosts();
     const baseUrl = 'https://crictrend.vercel.app';
 
     // Static routes

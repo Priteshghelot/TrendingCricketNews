@@ -3,7 +3,7 @@ import { getPosts, deletePost } from '@/lib/store';
 
 export async function POST() {
     try {
-        const posts = getPosts();
+        const posts = await getPosts();
         const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
 
         let deletedCount = 0;
@@ -34,9 +34,8 @@ export async function POST() {
 
         // Delete old posts
         for (const post of postsToDelete) {
-            if (deletePost(post.id)) {
-                deletedCount++;
-            }
+            await deletePost(post.id);
+            deletedCount++;
         }
 
         return NextResponse.json({
@@ -55,7 +54,7 @@ export async function POST() {
 }
 
 export async function GET() {
-    const posts = getPosts();
+    const posts = await getPosts();
     const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
 
     const oldPosts = posts.filter(p => p.timestamp < thirtyDaysAgo);

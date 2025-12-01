@@ -6,7 +6,7 @@ export async function GET(request: Request) {
     const status = searchParams.get('status');
     const published = searchParams.get('published');
 
-    let posts = published === 'true' ? getPublishedPosts() : getPosts();
+    let posts = published === 'true' ? await getPublishedPosts() : await getPosts();
 
     if (status && !published) {
         posts = posts.filter((p) => p.status === status);
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
         if (b.timestamp !== a.timestamp) {
             return b.timestamp - a.timestamp;
         }
-        // If timestamps are equal, sort by ID (descending = newest first)
+        // If timestamps are equal, sort by ID for consistent ordering
         return b.id.localeCompare(a.id);
     });
 
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
             keywords: []
         };
 
-        addPost(newPost);
+        await addPost(newPost);
 
         return NextResponse.json({ success: true, post: newPost });
     } catch (error) {
@@ -63,7 +63,7 @@ export async function PUT(request: Request) {
             return NextResponse.json({ error: 'Missing id or status' }, { status: 400 });
         }
 
-        updatePostStatus(id, status as Post['status'], status === 'approved', {
+        await updatePostStatus(id, status as Post['status'], {
             content,
             highlights,
             body,
@@ -85,13 +85,9 @@ export async function DELETE(request: Request) {
             return NextResponse.json({ error: 'Missing id' }, { status: 400 });
         }
 
-        const success = deletePost(id);
+        await deletePost(id);
 
-        if (success) {
-            return NextResponse.json({ success: true });
-        } else {
-            return NextResponse.json({ error: 'Post not found' }, { status: 404 });
-        }
+        return NextResponse.json({ success: true });
     } catch (error) {
         return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }

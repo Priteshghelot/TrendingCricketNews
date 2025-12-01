@@ -11,8 +11,8 @@ interface Props {
 }
 
 // Find the full ID from short ID
-function findPostByShortId(shortId: string): string | null {
-    const posts = getPosts();
+async function findPostByShortId(shortId: string): Promise<string | null> {
+    const posts = await getPosts();
     for (const post of posts) {
         if (createShortId(post.id) === shortId) {
             return post.id;
