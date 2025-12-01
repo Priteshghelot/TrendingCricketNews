@@ -28,6 +28,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [newPost, setNewPost] = useState({ content: '', body: '', imageUrl: '' });
   const previousPostIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -66,13 +68,6 @@ export default function Home() {
 
         previousPostIds.current = new Set(newPosts.map((p: Post) => p.id));
 
-        // DISABLED: Automatic news fetching removed for manual-only content
-        // if (!isBackground) {
-        //   fetch('/api/cron/news').then(() => {
-        //     fetchPosts(true);
-        //   }).catch(console.error);
-        // }
-
       } catch (error) {
         console.error('Failed to fetch posts', error);
         setLoading(false);
@@ -100,29 +95,40 @@ export default function Home() {
     checkAdmin();
   }, []);
 
-  const handleDelete = async (postId: string, postTitle: string) => {
-    if (!confirm(`Are you sure you want to delete:\n"${postTitle}"?`)) return;
+  const handleCreatePost = async () => {
+    if (!newPost.content) return alert('Headline is required');
 
     try {
-      const res = await fetch(`/api/posts?id=${postId}`, {
-        method: 'DELETE',
+      const res = await fetch('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newPost,
+          status: 'approved',
+          highlights: newPost.body.substring(0, 150) + '...'
+        })
       });
 
       if (res.ok) {
-        setPosts(posts.filter(p => p.id !== postId));
-        alert('Post deleted successfully!');
+        alert('Post published successfully!');
+        setIsCreating(false);
+        setNewPost({ content: '', body: '', imageUrl: '' });
+        // Refresh posts immediately
+        const refreshRes = await fetch('/api/posts?status=approved');
+        const data = await refreshRes.json();
+        setPosts(data.posts.sort((a: Post, b: Post) => b.timestamp - a.timestamp));
       } else {
-        alert('Failed to delete post');
+        alert('Failed to publish post');
       }
     } catch (error) {
-      console.error('Error deleting post:', error);
-      alert('Error deleting post');
+      console.error('Error creating post:', error);
+      alert('Error creating post');
     }
   };
 
   // Prevent body scroll when modal is open
   useEffect(() => {
-    if (selectedPost) {
+    if (selectedPost || isCreating) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -130,7 +136,7 @@ export default function Home() {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [selectedPost]);
+  }, [selectedPost, isCreating]);
 
   // Show all approved posts (not just recent 24h)
   const approvedPosts = posts;
@@ -161,7 +167,7 @@ export default function Home() {
         <BreakingNews posts={posts.slice(0, 5)} />
       </div>
 
-      <header style={{ textAlign: 'center', margin: '2rem 0 1.5rem' }}>
+      <header style={{ textAlign: 'center', margin: '2rem 0 1.5rem', position: 'relative' }}>
         <h1 style={{
           fontSize: 'clamp(2rem, 5vw, 3rem)',
           marginBottom: '0.5rem',
@@ -173,6 +179,29 @@ export default function Home() {
         <p style={{ color: '#94a3b8', fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', padding: '0 1rem' }}>
           Match reports, highlights, and trending stories. Auto-updates every 10 seconds.
         </p>
+
+        {isAdmin && (
+          <button
+            onClick={() => setIsCreating(true)}
+            style={{
+              marginTop: '1rem',
+              background: '#10b981',
+              color: 'white',
+              border: 'none',
+              padding: '0.8rem 1.5rem',
+              borderRadius: '30px',
+              fontSize: '1rem',
+              fontWeight: '600',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            ➕ Add News
+          </button>
+        )}
       </header>
 
       {/* Top Banner Ad */}
@@ -246,28 +275,6 @@ export default function Home() {
                       <span style={{ fontSize: 'clamp(0.75rem, 1.5vw, 0.85rem)', color: '#64748b' }}>
                         {new Date(post.timestamp).toLocaleDateString()}
                       </span>
-                      {isAdmin && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(post.id, post.content);
-                          }}
-                          style={{
-                            background: '#ef4444',
-                            color: 'white',
-                            border: 'none',
-                            padding: '0.4rem 0.8rem',
-                            borderRadius: '4px',
-                            fontSize: '0.75rem',
-                            cursor: 'pointer',
-                            transition: 'background 0.2s'
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = '#dc2626'}
-                          onMouseLeave={(e) => e.currentTarget.style.background = '#ef4444'}
-                        >
-                          🗑️ Delete
-                        </button>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -285,6 +292,82 @@ export default function Home() {
                 )}
               </React.Fragment>
             ))}
+        </div>
+      )}
+
+      {/* Create Post Modal */}
+      {isCreating && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.9)',
+            zIndex: 2000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem'
+          }}
+          onClick={() => setIsCreating(false)}
+        >
+          <div
+            style={{
+              background: '#1e293b',
+              padding: '2rem',
+              borderRadius: '12px',
+              width: '100%',
+              maxWidth: '600px',
+              border: '1px solid #334155'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h2 style={{ marginBottom: '1.5rem', color: 'white' }}>📝 Write New Article</h2>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Headline</label>
+              <input
+                value={newPost.content}
+                onChange={e => setNewPost({ ...newPost, content: e.target.value })}
+                placeholder="Enter catchy headline..."
+                style={{ width: '100%', padding: '0.8rem', background: '#0f172a', border: '1px solid #334155', color: 'white', borderRadius: '6px' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Image URL</label>
+              <input
+                value={newPost.imageUrl}
+                onChange={e => setNewPost({ ...newPost, imageUrl: e.target.value })}
+                placeholder="https://..."
+                style={{ width: '100%', padding: '0.8rem', background: '#0f172a', border: '1px solid #334155', color: 'white', borderRadius: '6px' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Article Body</label>
+              <textarea
+                value={newPost.body}
+                onChange={e => setNewPost({ ...newPost, body: e.target.value })}
+                placeholder="Write your story here..."
+                style={{ width: '100%', height: '200px', padding: '0.8rem', background: '#0f172a', border: '1px solid #334155', color: 'white', borderRadius: '6px', resize: 'vertical' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button
+                onClick={handleCreatePost}
+                style={{ flex: 1, padding: '0.8rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}
+              >
+                Publish Now
+              </button>
+              <button
+                onClick={() => setIsCreating(false)}
+                style={{ flex: 1, padding: '0.8rem', background: '#475569', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
