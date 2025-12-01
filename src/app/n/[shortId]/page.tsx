@@ -24,7 +24,7 @@ async function findPostByShortId(shortId: string): Promise<string | null> {
 // Generate metadata for social media sharing
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { shortId } = await params;
-    const fullId = findPostByShortId(shortId);
+    const fullId = await findPostByShortId(shortId);
 
     if (!fullId) {
         return {
@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         };
     }
 
-    const post = getPostById(fullId);
+    const post = await getPostById(fullId);
 
     if (!post) {
         return {
@@ -99,7 +99,7 @@ export default async function ShortLinkPage({ params }: Props) {
     const { shortId } = await params;
 
     // Find the full post ID
-    const fullId = findPostByShortId(shortId);
+    const fullId = await findPostByShortId(shortId);
 
     if (!fullId) {
         // Post not found, redirect to homepage
@@ -115,7 +115,7 @@ export default async function ShortLinkPage({ params }: Props) {
 
 // Generate static params for recent posts
 export async function generateStaticParams() {
-    const posts = getPosts();
+    const posts = await getPosts();
     const recentPosts = posts
         .filter(p => p.status === 'approved')
         .slice(0, 200);
@@ -123,6 +123,7 @@ export async function generateStaticParams() {
     return recentPosts.map((post) => ({
         shortId: createShortId(post.id),
     }));
+}
 }
 
 export const dynamicParams = true;

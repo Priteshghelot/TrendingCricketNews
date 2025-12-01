@@ -31,7 +31,7 @@ export const dynamicParams = true;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;
-    const post = getPostById(id);
+    const post = await getPostById(id);
 
     if (!post) {
         return {
@@ -107,7 +107,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function NewsPage({ params }: Props) {
     const { id } = await params;
-    const post = getPostById(id);
+    const post = await getPostById(id);
 
     if (!post) {
         notFound();
