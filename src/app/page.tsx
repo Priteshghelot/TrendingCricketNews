@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { getPublishedPosts, getScore } from '@/lib/store';
+// Removed server-side imports to prevent client-side bundling issues
 import AdSense from '@/components/AdSense';
 import BreakingNews from '@/components/BreakingNews';
 import SchemaOrg from '@/components/SchemaOrg';
@@ -36,7 +36,7 @@ export default function Home() {
     const fetchPosts = async (isBackground = false) => {
       try {
         // 1. Fetch existing posts immediately
-        const res = await fetch('/api/posts?status=approved');
+        const res = await fetch(`/api/posts?status=approved&t=${Date.now()}`);
         const data = await res.json();
         let newPosts = data.posts;
 
@@ -121,11 +121,12 @@ export default function Home() {
         setEditorData({ id: '', content: '', body: '', imageUrl: '' });
 
         // Refresh posts
-        const refreshRes = await fetch('/api/posts?status=approved');
+        const refreshRes = await fetch(`/api/posts?status=approved&t=${Date.now()}`);
         const data = await refreshRes.json();
         setPosts(data.posts.sort((a: Post, b: Post) => b.timestamp - a.timestamp));
       } else {
-        alert('Failed to save post');
+        const errorData = await res.json();
+        alert(`Failed to save post: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error saving post:', error);
