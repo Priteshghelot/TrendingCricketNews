@@ -381,7 +381,15 @@ export default function Home() {
                 marginBottom: '2rem'
               }}>
                 {selectedPost.highlights && (
-                  <p style={{ whiteSpace: 'pre-wrap' }}>{selectedPost.highlights}</p>
+                  <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', borderLeft: '3px solid var(--primary)' }}>
+                    <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--primary)', fontSize: '0.9rem', textTransform: 'uppercase' }}>Highlights</h4>
+                    <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{selectedPost.highlights}</p>
+                  </div>
+                )}
+                {selectedPost.body && (
+                  <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.9' }}>
+                    {selectedPost.body}
+                  </div>
                 )}
               </div>
 
