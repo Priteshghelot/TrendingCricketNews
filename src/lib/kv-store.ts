@@ -135,7 +135,8 @@ export async function getPostById(id: string): Promise<Post | undefined> {
 // Atomic operation using HSET - no race conditions!
 export async function addPost(post: Post): Promise<void> {
     try {
-        await kv.hset('crictrend:posts_hash', { [post.id]: post });
+        const result = await kv.hset('crictrend:posts_hash', { [post.id]: post });
+        console.log(`Added post ${post.id}. Result: ${result}`);
     } catch (error) {
         console.error('Failed to add post:', error);
         throw error;
