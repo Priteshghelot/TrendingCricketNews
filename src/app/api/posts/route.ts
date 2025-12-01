@@ -53,7 +53,8 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ success: true, post: newPost });
     } catch (error) {
-        return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+        console.error('API POST Error:', error);
+        return NextResponse.json({ error: `Server Error: ${String(error)}` }, { status: 500 });
     }
 }
 
