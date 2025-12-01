@@ -7,7 +7,7 @@ const DATA_FILE = path.join(process.cwd(), 'data', 'posts.json');
 
 export async function GET() {
     try {
-        const allPosts = getPosts();
+        const allPosts = await getPosts();
 
         // Remove duplicates based on title (content field) and source URL
         const uniquePosts: Post[] = [];

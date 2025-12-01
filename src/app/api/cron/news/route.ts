@@ -108,7 +108,7 @@ export async function GET() {
         console.log('Starting cricket news fetch...');
 
         // 1. Auto-archive approved posts older than 24 hours
-        const allPosts = getPosts();
+        const allPosts = await getPosts();
         const approvedPosts = allPosts.filter(p => p.status === 'approved');
         let autoArchivedCount = 0;
 
@@ -116,14 +116,14 @@ export async function GET() {
 
         for (const post of approvedPosts) {
             if (post.timestamp < twentyFourHoursAgo) {
-                updatePostStatus(post.id, 'archived', false);
+                await updatePostStatus(post.id, 'archived');
                 autoArchivedCount++;
                 console.log(`Auto-archived post: ${post.id}`);
             }
         }
 
         // 2. Fetch new cricket posts from all sources
-        const existingPosts = getPosts();
+        const existingPosts = await getPosts();
         let newPostsCount = 0;
 
         for (const feedUrl of RSS_FEEDS) {
@@ -238,7 +238,7 @@ export async function GET() {
                                 keywords: ['cricket']
                             };
 
-                            addPost(newPost);
+                            await addPost(newPost);
                             newPostsCount++;
                             console.log(`Added cricket post: ${item.title}`);
                         } else {

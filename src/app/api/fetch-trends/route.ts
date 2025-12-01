@@ -9,7 +9,7 @@ const RSS_URL = 'https://www.espncricinfo.com/rss/content/story/feeds/0.xml';
 export async function POST() {
     try {
         const feed = await parser.parseURL(RSS_URL);
-        const existingPosts = getPosts();
+        const existingPosts = await getPosts();
         const newPosts = [];
 
         // Process only the first 6 items to avoid timeout/rate limits
@@ -84,7 +84,7 @@ export async function POST() {
                     keywords: keywords
                 };
 
-                addPost(newPost);
+                await addPost(newPost);
                 newPosts.push(newPost);
             }
         }
