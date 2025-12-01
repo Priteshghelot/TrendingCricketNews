@@ -121,9 +121,9 @@ export async function generateStaticParams() {
         .slice(0, 200);
 
     return recentPosts.map((post) => ({
-        shortId: createShortId(post.id),
-    }));
-}
-}
+        return recentPosts.map((post) => ({
+            shortId: createShortId(post.id),
+        }));
+    }
 
 export const dynamicParams = true;
