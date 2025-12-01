@@ -5,8 +5,10 @@ const POSTS_KEY = 'crictrend:posts';
 
 export async function POST() {
     try {
-        // Clear all posts from KV
-        await kv.set(POSTS_KEY, []);
+        // Clear all posts from KV (Hash)
+        await kv.del('crictrend:posts_hash');
+        // Also clear old key just in case
+        await kv.del(POSTS_KEY);
 
         return NextResponse.json({
             success: true,
