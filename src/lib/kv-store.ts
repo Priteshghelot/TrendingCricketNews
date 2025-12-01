@@ -70,36 +70,10 @@ const POSTS_KEY = 'crictrend:posts';
 const SCORE_KEY = 'crictrend:score';
 
 // Get all posts from KV
-// Uses Redis Hash for atomic operations and better performance
 export async function getPosts(throwOnError: boolean = false): Promise<Post[]> {
     try {
-        // Try to get from Hash first
-        const postsHash = await kv.hgetall<Record<string, Post>>('crictrend:posts_hash');
-
-        if (postsHash) {
-            const posts = Object.values(postsHash);
-            // Sort by timestamp descending (newest first)
-            return posts.sort((a, b) => b.timestamp - a.timestamp);
-        }
-
-        // Fallback: Check for old JSON array format and migrate if found
-        const oldPosts = await kv.get<Post[]>(POSTS_KEY);
-        if (oldPosts && oldPosts.length > 0) {
-            console.log('Migrating posts from JSON array to Hash...');
-            const migrationMap: Record<string, Post> = {};
-            oldPosts.forEach(p => {
-                migrationMap[p.id] = p;
-            });
-
-            // Save to Hash
-            await kv.hset('crictrend:posts_hash', migrationMap);
-            // Delete old key to complete migration
-            await kv.del(POSTS_KEY);
-
-            return oldPosts.sort((a, b) => b.timestamp - a.timestamp);
-        }
-
-        return [];
+        const posts = await kv.get<Post[]>(POSTS_KEY);
+        return posts || [];
     } catch (error) {
         console.error('Error getting posts from KV:', error);
         if (throwOnError) {
@@ -117,26 +91,16 @@ export async function getPublishedPosts(): Promise<Post[]> {
 
 // Get post by ID
 export async function getPostById(id: string): Promise<Post | undefined> {
-    try {
-        // Fetch directly from Hash - much faster/cheaper than getting all
-        const post = await kv.hget<Post>('crictrend:posts_hash', id);
-        if (post) return post;
-
-        // Fallback to full list check (in case of migration edge cases)
-        const posts = await getPosts(false);
-        return posts.find(p => p.id === id);
-    } catch (error) {
-        console.error(`Error getting post ${id}:`, error);
-        return undefined;
-    }
+    const posts = await getPosts(false);
+    return posts.find(p => p.id === id);
 }
 
 // Add a new post
-// Atomic operation using HSET - no race conditions!
 export async function addPost(post: Post): Promise<void> {
     try {
-        const result = await kv.hset('crictrend:posts_hash', { [post.id]: post });
-        console.log(`Added post ${post.id}. Result: ${result}`);
+        const posts = await getPosts(true);
+        posts.unshift(post); // Add to beginning
+        await kv.set(POSTS_KEY, posts);
     } catch (error) {
         console.error('Failed to add post:', error);
         throw error;
@@ -144,7 +108,6 @@ export async function addPost(post: Post): Promise<void> {
 }
 
 // Update post status and content
-// Atomic operation using HSET - no race conditions!
 export async function updatePostStatus(
     id: string,
     status: 'pending' | 'approved' | 'rejected' | 'archived',
@@ -156,20 +119,20 @@ export async function updatePostStatus(
     }
 ): Promise<void> {
     try {
-        // We need to get the existing post first to merge updates
-        const post = await getPostById(id);
+        const posts = await getPosts(true);
+        const index = posts.findIndex(p => p.id === id);
 
-        if (post) {
-            const updatedPost = { ...post, status };
+        if (index !== -1) {
+            posts[index].status = status;
 
             if (updates) {
-                if (updates.content !== undefined) updatedPost.content = updates.content;
-                if (updates.highlights !== undefined) updatedPost.highlights = updates.highlights;
-                if (updates.body !== undefined) updatedPost.body = updates.body;
-                if (updates.imageUrl !== undefined) updatedPost.imageUrl = updates.imageUrl;
+                if (updates.content !== undefined) posts[index].content = updates.content;
+                if (updates.highlights !== undefined) posts[index].highlights = updates.highlights;
+                if (updates.body !== undefined) posts[index].body = updates.body;
+                if (updates.imageUrl !== undefined) posts[index].imageUrl = updates.imageUrl;
             }
 
-            await kv.hset('crictrend:posts_hash', { [id]: updatedPost });
+            await kv.set(POSTS_KEY, posts);
         }
     } catch (error) {
         console.error('Failed to update post:', error);
@@ -178,10 +141,11 @@ export async function updatePostStatus(
 }
 
 // Delete a post
-// Atomic operation using HDEL - no race conditions!
 export async function deletePost(id: string): Promise<void> {
     try {
-        await kv.hdel('crictrend:posts_hash', id);
+        const posts = await getPosts(true);
+        const filteredPosts = posts.filter(p => p.id !== id);
+        await kv.set(POSTS_KEY, filteredPosts);
     } catch (error) {
         console.error('Failed to delete post:', error);
         throw error;
