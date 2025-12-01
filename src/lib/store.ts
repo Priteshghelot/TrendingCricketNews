@@ -9,33 +9,14 @@ export {
     getScore,
     saveScore,
     type Post,
-    type Score
+    type Score,
+    type Batsman,
+    type Bowler,
+    type MatchPreview,
+    type DetailedScore
 } from './kv-store';
 
-// Keep other interfaces that are used elsewhere
-export interface Batsman {
-    name: string;
-    runs: string;
-    balls: string;
-    fours: string;
-    sixes: string;
-    sr: string;
-}
+import { MatchPreview } from './kv-store';
 
-export interface Bowler {
-    name: string;
-    overs: string;
-    maidens: string;
-    runs: string;
-    wickets: string;
-    economy: string;
-    extras?: string;
-}
-
-export interface UpcomingMatch {
-    title: string;
-    status: string;
-    isLive: boolean;
-    id?: string;
-    startTime?: string;
-}
+// Alias for backward compatibility if needed
+export type UpcomingMatch = MatchPreview;

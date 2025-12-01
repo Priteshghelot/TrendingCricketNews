@@ -12,6 +12,45 @@ export interface Post {
     body?: string;
 }
 
+export interface Batsman {
+    name: string;
+    runs: string;
+    balls: string;
+    fours: string;
+    sixes: string;
+    sr: string;
+}
+
+export interface Bowler {
+    name: string;
+    overs: string;
+    maidens: string;
+    runs: string;
+    wickets: string;
+    economy: string;
+    extras?: string;
+}
+
+export interface MatchPreview {
+    title: string;
+    status: string;
+    isLive: boolean;
+    id?: string;
+    startTime?: string;
+}
+
+export interface DetailedScore {
+    batters: Batsman[];
+    bowlers: Bowler[];
+    partnership: string;
+    recentBalls: string[];
+    matchInfo: string;
+    scrapedScores: string[];
+    seriesName: string;
+    matchLocation: string;
+    equation: string;
+}
+
 export interface Score {
     teamA: string;
     teamB: string;
@@ -19,6 +58,12 @@ export interface Score {
     scoreB: string;
     status: string;
     matchTitle: string;
+    seriesName?: string;
+    matchLocation?: string;
+    equation?: string;
+    commentary?: any[];
+    detailedScore?: DetailedScore;
+    upcomingMatches?: MatchPreview[];
 }
 
 const POSTS_KEY = 'crictrend:posts';
