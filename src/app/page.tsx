@@ -27,6 +27,7 @@ export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const previousPostIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -88,6 +89,36 @@ export default function Home() {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdmin = () => {
+      const cookies = document.cookie.split(';');
+      const authToken = cookies.find(c => c.trim().startsWith('auth_token='));
+      setIsAdmin(!!authToken);
+    };
+    checkAdmin();
+  }, []);
+
+  const handleDelete = async (postId: string, postTitle: string) => {
+    if (!confirm(`Are you sure you want to delete:\n"${postTitle}"?`)) return;
+
+    try {
+      const res = await fetch(`/api/posts?id=${postId}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        setPosts(posts.filter(p => p.id !== postId));
+        alert('Post deleted successfully!');
+      } else {
+        alert('Failed to delete post');
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      alert('Error deleting post');
+    }
+  };
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -211,9 +242,33 @@ export default function Home() {
                         {post.body}
                       </p>
                     )}
-                    <span style={{ fontSize: 'clamp(0.75rem, 1.5vw, 0.85rem)', color: '#64748b' }}>
-                      {new Date(post.timestamp).toLocaleDateString()}
-                    </span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 'clamp(0.75rem, 1.5vw, 0.85rem)', color: '#64748b' }}>
+                        {new Date(post.timestamp).toLocaleDateString()}
+                      </span>
+                      {isAdmin && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(post.id, post.content);
+                          }}
+                          style={{
+                            background: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            padding: '0.4rem 0.8rem',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem',
+                            cursor: 'pointer',
+                            transition: 'background 0.2s'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#dc2626'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = '#ef4444'}
+                        >
+                          🗑️ Delete
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
