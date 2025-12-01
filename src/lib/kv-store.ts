@@ -70,25 +70,30 @@ const POSTS_KEY = 'crictrend:posts';
 const SCORE_KEY = 'crictrend:score';
 
 // Get all posts from KV
-export async function getPosts(): Promise<Post[]> {
+// For read-only operations, we can return empty array on error
+// For write operations, we MUST throw error to prevent overwriting data with empty array
+export async function getPosts(throwOnError: boolean = false): Promise<Post[]> {
     try {
         const posts = await kv.get<Post[]>(POSTS_KEY);
         return posts || [];
     } catch (error) {
         console.error('Error getting posts from KV:', error);
+        if (throwOnError) {
+            throw error;
+        }
         return [];
     }
 }
 
 // Get published posts (approved with body content)
 export async function getPublishedPosts(): Promise<Post[]> {
-    const posts = await getPosts();
+    const posts = await getPosts(false);
     return posts.filter(p => p.status === 'approved' && p.body && p.body.trim().length > 0);
 }
 
 // Get post by ID
 export async function getPostById(id: string): Promise<Post | undefined> {
-    const posts = await getPosts();
+    const posts = await getPosts(false);
     return posts.find(p => p.id === id);
 }
 
@@ -104,9 +109,15 @@ async function savePosts(posts: Post[]): Promise<void> {
 
 // Add a new post
 export async function addPost(post: Post): Promise<void> {
-    const posts = await getPosts();
-    posts.unshift(post);
-    await savePosts(posts);
+    try {
+        // MUST throw on error to prevent overwriting with empty array
+        const posts = await getPosts(true);
+        posts.unshift(post);
+        await savePosts(posts);
+    } catch (error) {
+        console.error('Failed to add post:', error);
+        throw error;
+    }
 }
 
 // Update post status and content
@@ -120,26 +131,38 @@ export async function updatePostStatus(
         imageUrl?: string;
     }
 ): Promise<void> {
-    const posts = await getPosts();
-    const post = posts.find(p => p.id === id);
+    try {
+        // MUST throw on error to prevent overwriting with empty array
+        const posts = await getPosts(true);
+        const post = posts.find(p => p.id === id);
 
-    if (post) {
-        post.status = status;
-        if (updates) {
-            if (updates.content !== undefined) post.content = updates.content;
-            if (updates.highlights !== undefined) post.highlights = updates.highlights;
-            if (updates.body !== undefined) post.body = updates.body;
-            if (updates.imageUrl !== undefined) post.imageUrl = updates.imageUrl;
+        if (post) {
+            post.status = status;
+            if (updates) {
+                if (updates.content !== undefined) post.content = updates.content;
+                if (updates.highlights !== undefined) post.highlights = updates.highlights;
+                if (updates.body !== undefined) post.body = updates.body;
+                if (updates.imageUrl !== undefined) post.imageUrl = updates.imageUrl;
+            }
+            await savePosts(posts);
         }
-        await savePosts(posts);
+    } catch (error) {
+        console.error('Failed to update post:', error);
+        throw error;
     }
 }
 
 // Delete a post
 export async function deletePost(id: string): Promise<void> {
-    const posts = await getPosts();
-    const filtered = posts.filter(p => p.id !== id);
-    await savePosts(filtered);
+    try {
+        // MUST throw on error to prevent overwriting with empty array
+        const posts = await getPosts(true);
+        const filtered = posts.filter(p => p.id !== id);
+        await savePosts(filtered);
+    } catch (error) {
+        console.error('Failed to delete post:', error);
+        throw error;
+    }
 }
 
 // Get score
