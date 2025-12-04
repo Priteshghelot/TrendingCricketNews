@@ -29,6 +29,14 @@ export async function POST(request: Request) {
 
         await addPost(newPost);
 
+        // Force cache invalidation for the homepage
+        try {
+            const { revalidatePath } = await import('next/cache');
+            revalidatePath('/');
+        } catch (e) {
+            console.error('Revalidation failed:', e);
+        }
+
         return NextResponse.json({ success: true, post: newPost });
     } catch (error) {
         console.error('POST error:', error);
