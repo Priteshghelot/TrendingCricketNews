@@ -1,13 +1,17 @@
 import './globals.css';
-import { Inter } from 'next/font/google';
+import { Roboto } from 'next/font/google';
 import Link from 'next/link';
 
-const inter = Inter({ subsets: ['latin'] });
+const roboto = Roboto({
+    weight: ['300', '400', '500', '700', '900'],
+    subsets: ['latin'],
+    display: 'swap',
+});
 
 export const metadata = {
     metadataBase: new URL('https://crictrend.vercel.app'),
     title: {
-        default: 'CricTrend - Latest Cricket News & Updates',
+        default: 'CricTrend - Live Cricket Scores, News & Updates',
         template: '%s | CricTrend',
     },
     description: 'Get the latest cricket news, live scores, and breaking updates from around the world.',
@@ -15,13 +19,13 @@ export const metadata = {
         type: 'website',
         locale: 'en_US',
         url: 'https://crictrend.vercel.app',
-        title: 'CricTrend - Latest Cricket News',
+        title: 'CricTrend - Live Cricket Scores',
         description: 'Get the latest cricket news, live scores, and breaking updates.',
         siteName: 'CricTrend',
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'CricTrend - Latest Cricket News',
+        title: 'CricTrend - Live Cricket Scores',
         description: 'Get the latest cricket news, live scores, and breaking updates.',
     },
     verification: {
@@ -38,7 +42,7 @@ export default function RootLayout({
         <html lang="en">
             <head>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                <meta name="theme-color" content="#0a0a0a" />
+                <meta name="theme-color" content="#03a9f4" />
                 {/* Google AdSense */}
                 <meta name="google-adsense-account" content="ca-pub-3583801342408600" />
                 <script
@@ -59,15 +63,17 @@ export default function RootLayout({
                     }}
                 />
             </head>
-            <body className={inter.className}>
+            <body className={roboto.className}>
                 <header className="header">
                     <div className="container header-inner">
                         <Link href="/" className="logo">
-                            <span className="logo-cric">Cric</span>
-                            <span className="logo-trend">Trend</span>
+                            <span>CricTrend</span>
                         </Link>
                         <nav className="nav-links">
-                            <Link href="/" className="nav-link">Home</Link>
+                            <Link href="/" className="nav-link">Live Scores</Link>
+                            <Link href="/" className="nav-link">Series</Link>
+                            <Link href="/" className="nav-link">Teams</Link>
+                            <Link href="/" className="nav-link">News</Link>
                             <Link href="/login" className="nav-link btn-admin">Admin</Link>
                         </nav>
                     </div>
