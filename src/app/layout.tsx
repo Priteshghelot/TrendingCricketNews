@@ -64,10 +64,11 @@ export default function RootLayout({
                     <div className="container header-inner">
                         <Link href="/" className="logo">
                             <span className="logo-cric">Cric</span>
-                            <span>Trend</span>
+                            <span className="logo-trend">Trend</span>
                         </Link>
                         <nav className="nav-links">
                             <Link href="/" className="nav-link">Home</Link>
+                            <Link href="/login" className="nav-link btn-admin">Admin</Link>
                         </nav>
                     </div>
                 </header>

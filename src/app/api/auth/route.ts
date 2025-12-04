@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 
 // Simple password authentication
-// Set your password in .env.local as ADMIN_PASSWORD
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'crictrend123';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
 export async function POST(request: Request) {
     try {
