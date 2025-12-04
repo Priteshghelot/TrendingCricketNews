@@ -1,41 +1,72 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 
-const MOCK_SCORES = [
-    { id: 1, team1: 'IND', team2: 'AUS', score1: '280/4', score2: '145/2', status: 'IND lead by 135 runs', live: true },
-    { id: 2, team1: 'ENG', team2: 'SA', score1: '150/10', score2: '32/0', status: 'SA trail by 118 runs', live: true },
-    { id: 3, team1: 'NZ', team2: 'PAK', score1: '320/5', score2: 'Yet to bat', status: 'Innings Break', live: false },
-    { id: 4, team1: 'CSK', team2: 'MI', score1: '180/4', score2: '160/8', status: 'CSK won by 20 runs', live: false },
-];
+interface Match {
+    id: string;
+    title: string;
+    link: string;
+    live: boolean;
+    description: string;
+}
 
 export default function LiveScoreBar() {
-    const scrollRef = useRef<HTMLDivElement>(null);
+    const [matches, setMatches] = useState<Match[]>([]);
+
+    useEffect(() => {
+        // Fetch live scores
+        const fetchScores = async () => {
+            try {
+                const res = await fetch('/api/live-scores');
+                const data = await res.json();
+                setMatches(data.matches || []);
+            } catch (error) {
+                console.error('Error fetching live scores:', error);
+            }
+        };
+
+        fetchScores();
+
+        // Refresh every 60 seconds
+        const interval = setInterval(fetchScores, 60000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    if (matches.length === 0) {
+        return (
+            <div className="live-score-bar">
+                <div className="container">
+                    <div className="score-strip">
+                        <div className="score-card">
+                            <div className="match-status">Loading live scores...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="live-score-bar">
             <div className="container">
-                <div className="score-strip" ref={scrollRef}>
-                    {MOCK_SCORES.map((match) => (
-                        <div key={match.id} className="score-card">
+                <div className="score-strip">
+                    {matches.map((match) => (
+                        <a
+                            key={match.id}
+                            href={match.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="score-card"
+                            style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}
+                        >
                             <div className="score-header">
                                 <span className={`live-indicator ${match.live ? 'is-live' : ''}`}>
-                                    {match.live ? 'LIVE' : 'RESULT'}
+                                    {match.live ? 'LIVE' : 'RECENT'}
                                 </span>
-                                <span className="match-format">T20</span>
                             </div>
-                            <div className="teams">
-                                <div className="team-row">
-                                    <span className="team-name">{match.team1}</span>
-                                    <span className="team-score">{match.score1}</span>
-                                </div>
-                                <div className="team-row">
-                                    <span className="team-name">{match.team2}</span>
-                                    <span className="team-score">{match.score2}</span>
-                                </div>
-                            </div>
-                            <div className="match-status">{match.status}</div>
-                        </div>
+                            <div className="match-status">{match.title}</div>
+                        </a>
                     ))}
                 </div>
             </div>
