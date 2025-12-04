@@ -1,98 +1,74 @@
 import { NextResponse } from 'next/server';
-import { getPosts, getPublishedPosts, updatePostStatus, deletePost, addPost, Post } from '@/lib/store';
+import { getPosts, addPost, updatePost, deletePost, Post } from '@/lib/store';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
-export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status');
-    const published = searchParams.get('published');
-
-    let posts = published === 'true' ? await getPublishedPosts() : await getPosts();
-
-    if (status && !published) {
-        posts = posts.filter((p) => p.status === status);
-    }
-
-    // Sort by timestamp descending (newest first), then by ID for stable ordering
-    posts.sort((a, b) => {
-        // First, sort by timestamp (newest first)
-        if (b.timestamp !== a.timestamp) {
-            return b.timestamp - a.timestamp;
-        }
-        // If timestamps are equal, sort by ID for consistent ordering
-        return b.id.localeCompare(a.id);
-    });
-
+// GET all posts
+export async function GET() {
+    const posts = await getPosts();
     return NextResponse.json({ posts });
 }
 
+// CREATE a new post
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
-        const { content, highlights, body: articleBody, imageUrl, status } = body;
+        const { title, body, imageUrl, status } = await request.json();
 
-        if (!content) {
-            return NextResponse.json({ error: 'Missing content (headline)' }, { status: 400 });
+        if (!title || !body) {
+            return NextResponse.json({ error: 'Title and body are required' }, { status: 400 });
         }
 
         const newPost: Post = {
-            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-            content,
-            highlights: highlights || '',
-            body: articleBody || '',
+            id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
+            title,
+            body,
             imageUrl: imageUrl || '',
             status: status || 'pending',
             timestamp: Date.now(),
-            sourceUrl: '', // Created manually
-            keywords: []
         };
 
         await addPost(newPost);
 
         return NextResponse.json({ success: true, post: newPost });
     } catch (error) {
-        console.error('API POST Error:', error);
-        return NextResponse.json({ error: `Server Error: ${String(error)}` }, { status: 500 });
+        console.error('POST error:', error);
+        return NextResponse.json({ error: 'Server error' }, { status: 500 });
     }
 }
 
+// UPDATE a post
 export async function PUT(request: Request) {
     try {
-        const bodyData = await request.json();
-        const { id, status, content, highlights, body, imageUrl } = bodyData;
+        const { id, ...updates } = await request.json();
 
-        if (!id || !status) {
-            return NextResponse.json({ error: 'Missing id or status' }, { status: 400 });
+        if (!id) {
+            return NextResponse.json({ error: 'ID is required' }, { status: 400 });
         }
 
-        await updatePostStatus(id, status as Post['status'], {
-            content,
-            highlights,
-            body,
-            imageUrl
-        });
+        await updatePost(id, updates);
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+        console.error('PUT error:', error);
+        return NextResponse.json({ error: 'Server error' }, { status: 500 });
     }
 }
 
+// DELETE a post
 export async function DELETE(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 
         if (!id) {
-            return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+            return NextResponse.json({ error: 'ID is required' }, { status: 400 });
         }
 
         await deletePost(id);
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+        console.error('DELETE error:', error);
+        return NextResponse.json({ error: 'Server error' }, { status: 500 });
     }
 }
