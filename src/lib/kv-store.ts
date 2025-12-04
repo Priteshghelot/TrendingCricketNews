@@ -73,6 +73,11 @@ const SCORE_KEY = 'crictrend:score';
 export async function getPosts(throwOnError: boolean = false): Promise<Post[]> {
     try {
         const posts = await kv.get<Post[]>(POSTS_KEY);
+        // Robustness check: Ensure we actually got an array
+        if (!Array.isArray(posts)) {
+            console.warn('KV store returned non-array data for posts. Resetting to empty list.', typeof posts);
+            return [];
+        }
         return posts || [];
     } catch (error) {
         console.error('Error getting posts from KV:', error);
