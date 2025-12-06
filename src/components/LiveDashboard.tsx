@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { getFlagCode } from '@/lib/flags';
 
 interface Match {
     id: string;
@@ -42,26 +43,10 @@ interface Bowler {
 }
 
 interface MatchDetails {
+    currentOvers?: string;
     batsmen: Batsman[];
     bowlers: Bowler[];
 }
-
-const getFlagCode = (teamName: string): string => {
-    const lower = teamName.toLowerCase().trim();
-    if (lower.includes('india') || lower === 'ind') return 'in';
-    if (lower.includes('australia') || lower === 'aus') return 'au';
-    if (lower.includes('england') || lower === 'eng') return 'gb-eng';
-    if (lower.includes('south africa') || lower === 'sa') return 'za';
-    if (lower.includes('new zealand') || lower === 'nz') return 'nz';
-    if (lower.includes('pakistan') || lower === 'pak') return 'pk';
-    if (lower.includes('sri lanka') || lower === 'sl') return 'lk';
-    if (lower.includes('bangladesh') || lower === 'ban') return 'bd';
-    if (lower.includes('west indies') || lower === 'wi') return 'jm';
-    if (lower.includes('afghanistan') || lower === 'afg') return 'af';
-    if (lower.includes('zimbabwe') || lower === 'zim') return 'zw';
-    if (lower.includes('ireland') || lower === 'ire') return 'ie';
-    return 'un';
-};
 
 const parseMatchData = (title: string): { team1: TeamData, team2: TeamData, status: string } | null => {
     if (!title) return null;
@@ -137,7 +122,7 @@ export default function LiveDashboard() {
         } else {
             setDetails(null);
         }
-    }, [selectedMatch?.id]); // Re-fetch only when ID changes (or we can poll this too)
+    }, [selectedMatch?.id]);
 
     useEffect(() => {
         fetchScores();
@@ -198,7 +183,12 @@ export default function LiveDashboard() {
                                 <div style={{ fontSize: '2rem', fontWeight: '900', color: basicDetails.team1.isBatting ? '#fff' : '#888' }}>
                                     {basicDetails.team1.score}
                                 </div>
-                                <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#ccc' }}>{basicDetails.team1.name}</div>
+                                {basicDetails.team1.isBatting && details?.currentOvers && (
+                                    <div style={{ fontSize: '1rem', color: '#ff5252', fontWeight: 'bold', marginTop: '0.5rem' }}>
+                                        ({details.currentOvers})
+                                    </div>
+                                )}
+                                <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#ccc', marginTop: '0.5rem' }}>{basicDetails.team1.name}</div>
                             </div>
 
                             <div style={{ fontSize: '1.5rem', fontWeight: '900', opacity: 0.3 }}>VS</div>
@@ -213,7 +203,12 @@ export default function LiveDashboard() {
                                 <div style={{ fontSize: '2rem', fontWeight: '900', color: basicDetails.team2.isBatting ? '#fff' : '#888' }}>
                                     {basicDetails.team2.score}
                                 </div>
-                                <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#ccc' }}>{basicDetails.team2.name}</div>
+                                {basicDetails.team2.isBatting && details?.currentOvers && (
+                                    <div style={{ fontSize: '1rem', color: '#ff5252', fontWeight: 'bold', marginTop: '0.5rem' }}>
+                                        ({details.currentOvers})
+                                    </div>
+                                )}
+                                <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#ccc', marginTop: '0.5rem' }}>{basicDetails.team2.name}</div>
                             </div>
                         </div>
 
@@ -312,6 +307,7 @@ export default function LiveDashboard() {
                                 onClick={() => setSelectedMatch(data.trending)}
                             />
                         )}
+                        {data.live.length === 0 && !data.trending && <p style={{ color: '#666' }}>No live matches</p>}
                     </div>
                 </div>
 
@@ -324,6 +320,7 @@ export default function LiveDashboard() {
                         {data.upcoming.map(match => (
                             <MatchCard key={match.id} match={match} isUpcoming />
                         ))}
+                        {data.upcoming.length === 0 && <p style={{ color: '#666', fontStyle: 'italic' }}>No upcoming matches scheduled in feed</p>}
                     </div>
                 </div>
             </div>

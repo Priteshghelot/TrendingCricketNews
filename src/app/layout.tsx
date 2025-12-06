@@ -72,7 +72,7 @@ export default function RootLayout({
                         <nav className="nav-links">
                             <Link href="/live" className="nav-link">Live Scores</Link>
                             <Link href="/" className="nav-link">Series</Link>
-                            <Link href="/" className="nav-link">Teams</Link>
+                            <Link href="/teams" className="nav-link">Teams</Link>
                             <Link href="/" className="nav-link">News</Link>
                         </nav>
                     </div>
