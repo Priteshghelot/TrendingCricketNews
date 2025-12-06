@@ -54,64 +54,66 @@ export default async function HomePage() {
                                         boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
                                         border: '1px solid #333'
                                     }}>
-                                        <div style={{ position: 'absolute', inset: 0 }}>
-                                            {posts[0].imageUrl ? (
-                                                <NextImage
-                                                    src={posts[0].imageUrl}
-                                                    alt={posts[0].title}
-                                                    fill
-                                                    style={{ objectFit: 'cover' }}
-                                                    priority
-                                                />
-                                            ) : (
-                                                <div style={{ width: '100%', height: '100%', background: '#333' }} />
-                                            )}
+                                        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                                            <div style={{ position: 'absolute', inset: 0 }}>
+                                                {posts[0].imageUrl ? (
+                                                    <NextImage
+                                                        src={posts[0].imageUrl}
+                                                        alt={posts[0].title}
+                                                        fill
+                                                        style={{ objectFit: 'cover' }}
+                                                        priority
+                                                    />
+                                                ) : (
+                                                    <div style={{ width: '100%', height: '100%', background: '#333' }} />
+                                                )}
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    inset: 0,
+                                                    background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)'
+                                                }} />
+                                            </div>
                                             <div style={{
                                                 position: 'absolute',
-                                                inset: 0,
-                                                background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)'
-                                            }} />
-                                        </div>
-                                        <div style={{
-                                            position: 'absolute',
-                                            bottom: 0,
-                                            left: 0,
-                                            right: 0,
-                                            padding: '2rem',
-                                            color: '#fff'
-                                        }}>
-                                            <span style={{
-                                                background: 'var(--danger)',
-                                                color: '#fff',
-                                                padding: '0.25rem 0.75rem',
-                                                borderRadius: '20px',
-                                                fontSize: '0.8rem',
-                                                fontWeight: 'bold',
-                                                marginBottom: '0.75rem',
-                                                display: 'inline-block'
+                                                bottom: 0,
+                                                left: 0,
+                                                right: 0,
+                                                padding: '2rem',
+                                                color: '#fff'
                                             }}>
-                                                Breaking News
-                                            </span>
-                                            <h2 style={{
-                                                fontSize: '2rem',
-                                                fontWeight: '900',
-                                                marginBottom: '0.75rem',
-                                                lineHeight: 1.2,
-                                                textShadow: '0 2px 4px rgba(0,0,0,0.5)'
-                                            }}>
-                                                {posts[0].title}
-                                            </h2>
-                                            <p style={{
-                                                fontSize: '1rem',
-                                                color: '#ddd',
-                                                maxWidth: '800px',
-                                                display: '-webkit-box',
-                                                WebkitLineClamp: 2,
-                                                WebkitBoxOrient: 'vertical',
-                                                overflow: 'hidden'
-                                            }}>
-                                                {posts[0].body}
-                                            </p>
+                                                <span style={{
+                                                    background: 'var(--danger)',
+                                                    color: '#fff',
+                                                    padding: '0.25rem 0.75rem',
+                                                    borderRadius: '20px',
+                                                    fontSize: '0.8rem',
+                                                    fontWeight: 'bold',
+                                                    marginBottom: '0.75rem',
+                                                    display: 'inline-block'
+                                                }}>
+                                                    Breaking News
+                                                </span>
+                                                <h2 style={{
+                                                    fontSize: '2rem',
+                                                    fontWeight: '900',
+                                                    marginBottom: '0.75rem',
+                                                    lineHeight: 1.2,
+                                                    textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                                                }}>
+                                                    {posts[0].title}
+                                                </h2>
+                                                <p style={{
+                                                    fontSize: '1rem',
+                                                    color: '#ddd',
+                                                    maxWidth: '800px',
+                                                    display: '-webkit-box',
+                                                    WebkitLineClamp: 2,
+                                                    WebkitBoxOrient: 'vertical',
+                                                    overflow: 'hidden'
+                                                }}>
+                                                    {posts[0].body}
+                                                </p>
+                                            </div>
                                         </div>
                                     </Link>
                                 )}
