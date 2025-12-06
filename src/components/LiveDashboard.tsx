@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { getFlagCode } from '@/lib/flags';
 
 interface Match {
@@ -85,6 +86,10 @@ export default function LiveDashboard() {
     const [details, setDetails] = useState<MatchDetails | null>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
 
+    // URL params for deep linking
+    const searchParams = useSearchParams();
+    const queryMatchId = searchParams.get('matchId');
+
     // Fetch dashboard data
     const fetchScores = async () => {
         try {
@@ -92,12 +97,30 @@ export default function LiveDashboard() {
             const json = await res.json();
             if (json.dashboard) {
                 setData(json.dashboard);
-                if (!selectedMatch && json.dashboard.trending) {
-                    setSelectedMatch(json.dashboard.trending);
-                } else if (selectedMatch) {
-                    const allMatches = [json.dashboard.trending, ...json.dashboard.live, ...json.dashboard.recent, ...json.dashboard.upcoming];
-                    const updated = allMatches.find((m: Match) => m && m.id === selectedMatch.id);
+
+                // Priority of Selection:
+                // 1. User manually selected match (state)
+                // 2. URL query param match (on load)
+                // 3. Trending match (default)
+
+                const allMatches = [
+                    json.dashboard.trending,
+                    ...json.dashboard.live,
+                    ...json.dashboard.recent,
+                    ...json.dashboard.upcoming
+                ].filter(Boolean);
+
+                if (selectedMatch) {
+                    // Update current selection with fresh data
+                    const updated = allMatches.find((m: Match) => m.id === selectedMatch.id);
                     if (updated) setSelectedMatch(updated);
+                } else if (queryMatchId) {
+                    // Select match from URL
+                    const fromUrl = allMatches.find((m: Match) => m.id === queryMatchId);
+                    if (fromUrl) setSelectedMatch(fromUrl);
+                } else if (!selectedMatch && json.dashboard.trending) {
+                    // Default fallback
+                    setSelectedMatch(json.dashboard.trending);
                 }
             }
         } catch (error) {
@@ -229,8 +252,8 @@ export default function LiveDashboard() {
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
                                     {/* Batting */}
                                     <div>
-                                        <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#757575', marginBottom: '0.5rem' }}>BATTING</div>
-                                        {details.batsmen.length > 0 ? details.batsmen.slice(0, 2).map((b, i) => (
+                                        <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#757575', marginBottom: '0.5rem', borderBottom: '1px solid #eee', paddingBottom: '0.25rem' }}>BATTING</div>
+                                        {details.batsmen.length > 0 ? details.batsmen.map((b, i) => (
                                             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.95rem' }}>
                                                 <div>
                                                     <span style={{ fontWeight: '600' }}>{b.name}</span> <span style={{ color: 'var(--success)' }}>*</span>
@@ -243,8 +266,8 @@ export default function LiveDashboard() {
 
                                     {/* Bowling */}
                                     <div>
-                                        <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#757575', marginBottom: '0.5rem' }}>BOWLING</div>
-                                        {details.bowlers.length > 0 ? details.bowlers.slice(0, 2).map((b, i) => (
+                                        <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#757575', marginBottom: '0.5rem', borderBottom: '1px solid #eee', paddingBottom: '0.25rem' }}>BOWLING</div>
+                                        {details.bowlers.length > 0 ? details.bowlers.map((b, i) => (
                                             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.95rem' }}>
                                                 <div style={{ fontWeight: '600' }}>{b.name}</div>
                                                 <div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 interface Match {
     id: string;
@@ -70,11 +71,9 @@ export default function LiveScoreBar() {
             <div className="container">
                 <div className="score-strip">
                     {matches.map((match) => (
-                        <a
+                        <Link
                             key={match.id}
-                            href={match.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            href={`/live?matchId=${match.id}`}
                             className="score-card"
                             style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}
                         >
@@ -84,7 +83,7 @@ export default function LiveScoreBar() {
                                 </span>
                             </div>
                             <div className="match-status">{match.title}</div>
-                        </a>
+                        </Link>
                     ))}
                 </div>
             </div>
