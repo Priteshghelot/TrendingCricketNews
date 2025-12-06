@@ -85,10 +85,10 @@ export default function AdminPage() {
                 fetchPosts();
             } else {
                 const error = await res.json();
-                setMessage('❌ Failed to create post. Make sure Vercel KV is connected!');
+                setMessage(`❌ ${error.error || 'Failed to create post'}`);
             }
-        } catch (error) {
-            setMessage('❌ Error: Database not connected. Connect Vercel KV in your dashboard.');
+        } catch (error: any) {
+            setMessage(`❌ Network Error: ${error.message || 'Database not connected'}`);
         } finally {
             setSubmitting(false);
         }
