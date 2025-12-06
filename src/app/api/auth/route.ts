@@ -6,6 +6,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 export async function POST(request: Request) {
     try {
         const { password } = await request.json();
+        console.log('Login attempt with:', password, 'Expected:', ADMIN_PASSWORD, 'or admin123');
 
         if (password === ADMIN_PASSWORD || password === 'admin123') {
             return NextResponse.json({ success: true });

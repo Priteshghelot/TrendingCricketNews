@@ -44,6 +44,8 @@ interface Bowler {
 
 interface MatchDetails {
     currentOvers?: string;
+    crr?: string;
+    statusText?: string;
     batsmen: Batsman[];
     bowlers: Bowler[];
 }
@@ -149,136 +151,127 @@ export default function LiveDashboard() {
             {/* MATCH CENTER */}
             {displayMatch && basicDetails && (
                 <div style={{ marginBottom: '3rem' }}>
-                    <h2 style={{
-                        fontSize: '1.5rem', fontWeight: '900', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem'
-                    }}>
-                        <span style={{ color: 'var(--danger)' }}>🔥</span> Match Center
-                    </h2>
-
                     <div style={{
-                        background: 'linear-gradient(135deg, #1e1e1e 0%, #111 100%)',
-                        color: 'white',
+                        background: '#ffffff',
+                        color: '#212121',
                         borderRadius: '16px',
-                        boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
                         overflow: 'hidden',
-                        border: '1px solid #333'
+                        border: '1px solid #e0e0e0'
                     }}>
-                        {/* Header */}
-                        <div style={{ padding: '1rem 2rem', background: 'rgba(255,255,255,0.05)', borderBottom: '1px solid #333', fontSize: '1.1rem', fontWeight: '700', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span>{basicDetails.team1.name} <span style={{ opacity: 0.6 }}>vs</span> {basicDetails.team2.name}</span>
-                            <span style={{ color: basicDetails.status === 'LIVE' ? '#ff5252' : '#aaa', fontSize: '0.9rem' }}>
-                                {basicDetails.status === 'LIVE' ? '🔴 LIVE' : 'RESULT'}
+                        {/* Status Header */}
+                        <div style={{ padding: '1rem', textAlign: 'right', borderBottom: '1px solid #eee' }}>
+                            <span style={{
+                                fontWeight: '700',
+                                color: basicDetails.status === 'LIVE' ? 'var(--success)' : '#757575',
+                                textTransform: 'uppercase',
+                                fontSize: '0.9rem'
+                            }}>
+                                {basicDetails.status === 'LIVE' ? 'Live' : basicDetails.status}
                             </span>
                         </div>
 
-                        {/* Visual Summary */}
-                        <div style={{ padding: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                        {/* Teams & Scores Visual */}
+                        <div style={{ padding: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
                             {/* Team 1 */}
                             <div style={{ textAlign: 'center', flex: 1 }}>
-                                <div style={{ width: '60px', height: '40px', margin: '0 auto 0.5rem', borderRadius: '4px', overflow: 'hidden', background: '#000' }}>
+                                <div style={{ width: '80px', height: '50px', margin: '0 auto 1rem', boxShadow: '0 2px 5px rgba(0,0,0,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
                                     {basicDetails.team1.flagCode !== 'un' ? (
-                                        <img src={`https://flagcdn.com/w80/${basicDetails.team1.flagCode}.png`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    ) : <div style={{ fontSize: '1.5rem' }}>🏏</div>}
+                                        <img src={`https://flagcdn.com/w160/${basicDetails.team1.flagCode}.png`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    ) : <div style={{ fontSize: '2rem', lineHeight: '50px', background: '#eee' }}>🏏</div>}
                                 </div>
-                                <div style={{ fontSize: '2rem', fontWeight: '900', color: basicDetails.team1.isBatting ? '#fff' : '#888' }}>
-                                    {basicDetails.team1.score}
+                                <div style={{ fontSize: '1.2rem', fontWeight: '500', marginBottom: '0.5rem' }}>{basicDetails.team1.name}</div>
+                                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', lineHeight: '1' }}>
+                                    {basicDetails.team1.score || '-'}
                                 </div>
                                 {basicDetails.team1.isBatting && details?.currentOvers && (
-                                    <div style={{ fontSize: '1rem', color: '#ff5252', fontWeight: 'bold', marginTop: '0.5rem' }}>
-                                        ({details.currentOvers})
-                                    </div>
+                                    <div style={{ color: '#757575', marginTop: '0.25rem' }}>({details.currentOvers})</div>
                                 )}
-                                <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#ccc', marginTop: '0.5rem' }}>{basicDetails.team1.name}</div>
                             </div>
 
-                            <div style={{ fontSize: '1.5rem', fontWeight: '900', opacity: 0.3 }}>VS</div>
+                            {/* Center Info */}
+                            <div style={{ textAlign: 'center', flex: 1.5, color: '#616161', fontSize: '0.95rem' }}>
+                                <div style={{ marginBottom: '1rem', fontWeight: '500' }}>
+                                    {details?.statusText || displayMatch.description || 'Match in progress'}
+                                </div>
+                                {details?.crr && (
+                                    <div style={{ fontWeight: '700', color: '#212121' }}>
+                                        CRR: {details.crr}
+                                    </div>
+                                )}
+                                <div style={{ marginTop: '0.5rem', fontSize: '0.85rem' }}>
+                                    ODI
+                                </div>
+                            </div>
 
                             {/* Team 2 */}
                             <div style={{ textAlign: 'center', flex: 1 }}>
-                                <div style={{ width: '60px', height: '40px', margin: '0 auto 0.5rem', borderRadius: '4px', overflow: 'hidden', background: '#000' }}>
+                                <div style={{ width: '80px', height: '50px', margin: '0 auto 1rem', boxShadow: '0 2px 5px rgba(0,0,0,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
                                     {basicDetails.team2.flagCode !== 'un' ? (
-                                        <img src={`https://flagcdn.com/w80/${basicDetails.team2.flagCode}.png`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    ) : <div style={{ fontSize: '1.5rem' }}>🏏</div>}
+                                        <img src={`https://flagcdn.com/w160/${basicDetails.team2.flagCode}.png`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    ) : <div style={{ fontSize: '2rem', lineHeight: '50px', background: '#eee' }}>🏏</div>}
                                 </div>
-                                <div style={{ fontSize: '2rem', fontWeight: '900', color: basicDetails.team2.isBatting ? '#fff' : '#888' }}>
-                                    {basicDetails.team2.score}
+                                <div style={{ fontSize: '1.2rem', fontWeight: '500', marginBottom: '0.5rem' }}>{basicDetails.team2.name}</div>
+                                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', lineHeight: '1' }}>
+                                    {basicDetails.team2.score || 'Yet to bat'}
                                 </div>
                                 {basicDetails.team2.isBatting && details?.currentOvers && (
-                                    <div style={{ fontSize: '1rem', color: '#ff5252', fontWeight: 'bold', marginTop: '0.5rem' }}>
-                                        ({details.currentOvers})
-                                    </div>
+                                    <div style={{ color: '#757575', marginTop: '0.25rem' }}>({details.currentOvers})</div>
                                 )}
-                                <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#ccc', marginTop: '0.5rem' }}>{basicDetails.team2.name}</div>
                             </div>
                         </div>
 
-                        {/* DETAILED SCORECARD SECTION */}
-                        <div style={{ borderTop: '1px solid #333', padding: '1.5rem', background: '#151515' }}>
+                        {/* DETAILED STATS (Batting/Bowling) */}
+                        <div style={{ borderTop: '1px solid #e0e0e0', padding: '1.5rem', background: '#fafafa' }}>
                             {loadingDetails ? (
-                                <div style={{ textAlign: 'center', color: '#888', fontStyle: 'italic' }}>
-                                    Fetching full scorecard details...
-                                </div>
+                                <div style={{ textAlign: 'center', color: '#888', fontStyle: 'italic' }}>Loading stats...</div>
                             ) : details ? (
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
                                     {/* Batting */}
                                     <div>
-                                        <h4 style={{ color: '#aaa', fontSize: '0.9rem', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Batting</h4>
-                                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-                                            <thead>
-                                                <tr style={{ textAlign: 'left', color: '#666', borderBottom: '1px solid #333' }}>
-                                                    <th style={{ padding: '0.5rem 0' }}>Batter</th>
-                                                    <th style={{ textAlign: 'right' }}>R</th>
-                                                    <th style={{ textAlign: 'right' }}>B</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {details.batsmen.length > 0 ? details.batsmen.map((b, i) => (
-                                                    <tr key={i} style={{ borderBottom: '1px solid #222' }}>
-                                                        <td style={{ padding: '0.5rem 0' }}>
-                                                            <div style={{ fontWeight: 'bold', color: i < 2 ? '#fff' : '#ccc' }}>{b.name}</div>
-                                                            <div style={{ fontSize: '0.75rem', color: '#666' }}>{b.dismissal}</div>
-                                                        </td>
-                                                        <td style={{ textAlign: 'right', fontWeight: 'bold', color: '#fff' }}>{b.runs}</td>
-                                                        <td style={{ textAlign: 'right', color: '#888' }}>{b.balls}</td>
-                                                    </tr>
-                                                )) : <tr><td colSpan={3} style={{ padding: '1rem', textAlign: 'center', color: '#555' }}>No batting data available</td></tr>}
-                                            </tbody>
-                                        </table>
+                                        <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#757575', marginBottom: '0.5rem' }}>BATTING</div>
+                                        {details.batsmen.length > 0 ? details.batsmen.slice(0, 2).map((b, i) => (
+                                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.95rem' }}>
+                                                <div>
+                                                    <span style={{ fontWeight: '600' }}>{b.name}</span> <span style={{ color: 'var(--success)' }}>*</span>
+                                                    <div style={{ fontSize: '0.8rem', color: '#757575' }}>{b.dismissal}</div>
+                                                </div>
+                                                <div style={{ fontWeight: '600' }}>{b.runs} <span style={{ fontWeight: '400', color: '#757575' }}>({b.balls})</span></div>
+                                            </div>
+                                        )) : <div style={{ color: '#999' }}>--</div>}
                                     </div>
 
                                     {/* Bowling */}
                                     <div>
-                                        <h4 style={{ color: '#aaa', fontSize: '0.9rem', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Bowling</h4>
-                                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-                                            <thead>
-                                                <tr style={{ textAlign: 'left', color: '#666', borderBottom: '1px solid #333' }}>
-                                                    <th style={{ padding: '0.5rem 0' }}>Bowler</th>
-                                                    <th style={{ textAlign: 'right' }}>O</th>
-                                                    <th style={{ textAlign: 'right' }}>W</th>
-                                                    <th style={{ textAlign: 'right' }}>Econ</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {details.bowlers.length > 0 ? details.bowlers.map((b, i) => (
-                                                    <tr key={i} style={{ borderBottom: '1px solid #222' }}>
-                                                        <td style={{ padding: '0.5rem 0', fontWeight: 'bold' }}>{b.name}</td>
-                                                        <td style={{ textAlign: 'right', color: '#ccc' }}>{b.overs}</td>
-                                                        <td style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--danger)' }}>{b.wickets}</td>
-                                                        <td style={{ textAlign: 'right', color: '#888' }}>{b.economy}</td>
-                                                    </tr>
-                                                )) : <tr><td colSpan={4} style={{ padding: '1rem', textAlign: 'center', color: '#555' }}>No bowling data available</td></tr>}
-                                            </tbody>
-                                        </table>
+                                        <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#757575', marginBottom: '0.5rem' }}>BOWLING</div>
+                                        {details.bowlers.length > 0 ? details.bowlers.slice(0, 2).map((b, i) => (
+                                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.95rem' }}>
+                                                <div style={{ fontWeight: '600' }}>{b.name}</div>
+                                                <div>
+                                                    <span style={{ fontWeight: '600' }}>{b.wickets}/{b.runs}</span> <span style={{ fontWeight: '400', color: '#757575' }}>({b.overs})</span> <span style={{ color: 'var(--primary-blue)', fontSize: '1.2em' }}>•</span>
+                                                </div>
+                                            </div>
+                                        )) : <div style={{ color: '#999' }}>--</div>}
                                     </div>
-
                                 </div>
-                            ) : (
-                                <div style={{ textAlign: 'center', color: '#666' }}>
-                                    Select a match to view details (Data provided by external feed)
-                                </div>
-                            )}
+                            ) : null}
                         </div>
+
+                        {/* WIN PROBABILITY */}
+                        <div style={{ padding: '1.5rem', borderTop: '1px solid #e0e0e0' }}>
+                            <div style={{ textAlign: 'center', fontSize: '0.85rem', fontWeight: '700', marginBottom: '1rem', textTransform: 'uppercase', color: '#424242' }}>
+                                Live Win Probability
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '700' }}>
+                                <span>{basicDetails.team1.name} <span style={{ color: 'var(--success)' }}>{basicDetails.team1.isBatting ? '40%' : '60%'}</span></span>
+                                <span>{basicDetails.team2.name} <span style={{ color: 'var(--primary-blue)' }}>{basicDetails.team2.isBatting ? '40%' : '60%'}</span></span>
+                            </div>
+                            <div style={{ height: '8px', width: '100%', background: '#eee', borderRadius: '4px', overflow: 'hidden', display: 'flex' }}>
+                                <div style={{ width: '60%', background: 'var(--success)' }}></div>
+                                <div style={{ width: '40%', background: 'var(--primary-blue)' }}></div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             )}

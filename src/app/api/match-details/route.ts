@@ -123,9 +123,27 @@ export async function GET(request: NextRequest) {
             }
         });
 
+        // Extract CRR
+        const crrMatch = bodyText.match(/CRR:\s*([\d\.]+)/);
+        const crr = crrMatch ? crrMatch[1] : '';
+
+        // Extract Status Text (e.g. "IND chose to bowl")
+        // Usually found in the summary or header parts
+        let statusText = '';
+        const statusMatch = bodyText.match(/([A-Z]+ chose to [a-zA-Z]+)/);
+        if (statusMatch) {
+            statusText = statusMatch[1];
+        } else {
+            // Fallback to finding "won the toss"
+            const tossMatch = bodyText.match(/([a-zA-Z\s]+ won the toss [a-zA-Z\s]+)/);
+            if (tossMatch) statusText = tossMatch[1];
+        }
+
         const data = {
             title: $('title').text(),
             currentOvers: team1Overs,
+            crr,
+            statusText,
             batsmen: batsmen.slice(0, 15),
             bowlers: bowlers.slice(0, 10)
         };
