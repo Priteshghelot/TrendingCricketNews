@@ -1,6 +1,6 @@
 import Redis from 'ioredis';
 
-const redis = new Redis(process.env.KV_URL || '');
+const redis = new Redis(process.env.KV_URL || process.env.REDIS_URL || '');
 
 // Wrapper to match kv interface
 const kv = {
