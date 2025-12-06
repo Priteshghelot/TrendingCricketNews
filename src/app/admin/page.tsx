@@ -365,7 +365,14 @@ export default function AdminPage() {
                                 <div style={{ flex: 1 }}>
                                     <p className="post-item-title">{post.title}</p>
                                     <small style={{ color: '#666' }}>
-                                        {new Date(post.timestamp).toLocaleString()}
+                                        {new Date(post.timestamp).toLocaleDateString('en-US', {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            year: 'numeric',
+                                            hour: 'numeric',
+                                            minute: 'numeric',
+                                            timeZone: 'UTC'
+                                        })}
                                     </small>
                                 </div>
                                 <span className={`post-item-status status-${post.status}`}>

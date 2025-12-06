@@ -70,11 +70,10 @@ export default function RootLayout({
                             <span>CricTrend</span>
                         </Link>
                         <nav className="nav-links">
-                            <Link href="/" className="nav-link">Live Scores</Link>
+                            <Link href="/live" className="nav-link">Live Scores</Link>
                             <Link href="/" className="nav-link">Series</Link>
                             <Link href="/" className="nav-link">Teams</Link>
                             <Link href="/" className="nav-link">News</Link>
-                            <Link href="/login" className="nav-link btn-admin">Admin</Link>
                         </nav>
                     </div>
                 </header>

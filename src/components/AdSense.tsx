@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface AdSenseProps {
     adSlot: string;
@@ -15,12 +15,20 @@ export default function AdSense({
 }: AdSenseProps) {
     const adRequested = useRef(false);
     const insRef = useRef<HTMLModElement>(null);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
         if (adRequested.current) return;
 
         const checkWidth = () => {
             if (insRef.current && insRef.current.offsetWidth > 0) {
+                // Check if already loaded to prevent error
+                if (insRef.current.getAttribute('data-ad-status')) {
+                    adRequested.current = true;
+                    return;
+                }
+
                 adRequested.current = true;
                 try {
                     // @ts-ignore
@@ -35,6 +43,8 @@ export default function AdSense({
 
         checkWidth();
     }, []);
+
+    if (!mounted) return <div style={{ minWidth: '250px', minHeight: '50px', ...style }} />;
 
     return (
         <ins
