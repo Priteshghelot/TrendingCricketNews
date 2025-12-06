@@ -45,7 +45,7 @@ export default async function BreakingNewsBar() {
                         gap: '0.5rem'
                     }} className="breaking-news-link">
                         <span style={{ color: 'var(--primary-blue)', fontWeight: '700' }}>
-                            {new Date(latestPost.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}:
+                            {new Date(latestPost.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}:
                         </span>
                         {latestPost.title}
                     </Link>
