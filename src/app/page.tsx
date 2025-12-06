@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import NextImage from 'next/image';
 import { getApprovedPosts } from '@/lib/store';
 import AdSense from '@/components/AdSense';
 import BreakingNewsBar from '@/components/BreakingNewsBar';
@@ -55,7 +56,13 @@ export default async function HomePage() {
                                     }}>
                                         <div style={{ position: 'absolute', inset: 0 }}>
                                             {posts[0].imageUrl ? (
-                                                <img src={posts[0].imageUrl} alt={posts[0].title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <NextImage
+                                                    src={posts[0].imageUrl}
+                                                    alt={posts[0].title}
+                                                    fill
+                                                    style={{ objectFit: 'cover' }}
+                                                    priority
+                                                />
                                             ) : (
                                                 <div style={{ width: '100%', height: '100%', background: '#333' }} />
                                             )}
@@ -116,11 +123,14 @@ export default async function HomePage() {
                                             transition: 'transform 0.2s, box-shadow 0.2s',
                                         }}>
                                             {post.imageUrl ? (
-                                                <img
-                                                    src={post.imageUrl}
-                                                    alt={post.title}
-                                                    className="news-card-image-compact"
-                                                />
+                                                <div className="news-card-image-compact" style={{ position: 'relative', width: '240px', height: '100%', flexShrink: 0 }}>
+                                                    <NextImage
+                                                        src={post.imageUrl}
+                                                        alt={post.title}
+                                                        fill
+                                                        style={{ objectFit: 'cover' }}
+                                                    />
+                                                </div>
                                             ) : (
                                                 <div style={{
                                                     width: '240px',

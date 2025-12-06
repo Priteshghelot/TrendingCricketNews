@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 interface Post {
@@ -14,8 +13,6 @@ interface Post {
 }
 
 export default function AdminPage() {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [checkingAuth, setCheckingAuth] = useState(true);
     const [posts, setPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
     const [title, setTitle] = useState('');
@@ -24,23 +21,10 @@ export default function AdminPage() {
     const [imagePreview, setImagePreview] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState('');
-    const router = useRouter();
 
     useEffect(() => {
-        const auth = localStorage.getItem('crictrend_auth');
-        if (auth === 'true') {
-            setIsAuthenticated(true);
-        } else {
-            router.push('/login');
-        }
-        setCheckingAuth(false);
-    }, [router]);
-
-    useEffect(() => {
-        if (isAuthenticated) {
-            fetchPosts();
-        }
-    }, [isAuthenticated]);
+        fetchPosts();
+    }, []);
 
     const fetchPosts = async () => {
         try {
@@ -54,10 +38,7 @@ export default function AdminPage() {
         }
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem('crictrend_auth');
-        router.push('/login');
-    };
+
 
     const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -125,18 +106,6 @@ export default function AdminPage() {
         }
     };
 
-    if (checkingAuth) {
-        return (
-            <div className="loading" style={{ minHeight: '80vh' }}>
-                Checking authentication...
-            </div>
-        );
-    }
-
-    if (!isAuthenticated) {
-        return null;
-    }
-
     return (
         <div className="admin-container">
             {/* Header */}
@@ -156,9 +125,6 @@ export default function AdminPage() {
                     </h1>
                     <p style={{ opacity: 0.9 }}>Publish cricket news to your website</p>
                 </div>
-                <button onClick={handleLogout} className="btn btn-danger">
-                    Logout
-                </button>
             </div>
 
             {/* Stats Cards */}
