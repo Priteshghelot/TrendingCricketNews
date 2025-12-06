@@ -6,14 +6,10 @@ import Comments from '@/components/Comments';
 
 export const dynamic = 'force-dynamic';
 
-export async function generateStaticParams() {
-    const posts = await getApprovedPosts();
-    return posts.map((post) => ({ id: post.id }));
-}
-
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const post = await getPostById(id);
+    const decodedId = decodeURIComponent(id);
+    const post = await getPostById(decodedId);
 
     if (!post) {
         return { title: 'Not Found' };
@@ -60,7 +56,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function NewsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const post = await getPostById(id);
+    const decodedId = decodeURIComponent(id);
+    const post = await getPostById(decodedId);
 
     if (!post) {
         notFound();
