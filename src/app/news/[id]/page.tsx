@@ -15,6 +15,53 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const post = await getPostById(id);
 
     if (!post) {
+        return { title: 'Not Found' };
+    }
+
+    const url = `https://crictrend.vercel.app/news/${post.id}`;
+    const description = post.body.substring(0, 160);
+
+    // Ensure image URL is absolute for social media
+    const imageUrl = post.imageUrl
+        ? (post.imageUrl.startsWith('http') ? post.imageUrl : `https://crictrend.vercel.app${post.imageUrl}`)
+        : 'https://crictrend.vercel.app/default-cricket.jpg';
+
+    return {
+        title: post.title,
+        description,
+        alternates: {
+            canonical: url,
+        },
+        openGraph: {
+            type: 'article',
+            title: post.title,
+            description,
+            url,
+            siteName: 'CricTrend',
+            images: [
+                {
+                    url: imageUrl,
+                    width: 1200,
+                    height: 630,
+                    alt: post.title,
+                }
+            ],
+            publishedTime: new Date(post.timestamp).toISOString(),
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: post.title,
+            description,
+            images: [imageUrl],
+        },
+    };
+}
+
+export default async function NewsPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    const post = await getPostById(id);
+
+    if (!post) {
         notFound();
     }
 
