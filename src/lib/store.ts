@@ -76,9 +76,44 @@ export async function updatePost(id: string, updates: Partial<Post>): Promise<vo
     }
 }
 
-// Delete post
+// Comments Interface
+export interface Comment {
+    id: string;
+    postId: string;
+    author: string;
+    text: string;
+    timestamp: number;
+}
+
+const COMMENTS_PREFIX = 'crictrend:comments:';
+
+// Get comments for a post
+export async function getComments(postId: string): Promise<Comment[]> {
+    try {
+        const key = `${COMMENTS_PREFIX}${postId}`;
+        const comments = await kv.get<Comment[]>(key);
+        if (!Array.isArray(comments)) return [];
+        return comments.sort((a, b) => b.timestamp - a.timestamp); // Newest first
+    } catch (error) {
+        console.error('Error getting comments:', error);
+        return [];
+    }
+}
+
+// Add a comment
+export async function addComment(comment: Comment): Promise<void> {
+    const key = `${COMMENTS_PREFIX}${comment.postId}`;
+    const comments = await getComments(comment.postId);
+    comments.unshift(comment);
+    // Limit to last 50 comments per post to save space
+    if (comments.length > 50) comments.pop();
+    await kv.set(key, comments);
+}
+
+// Delete post (updated to delete comments too - optional but good practice)
 export async function deletePost(id: string): Promise<void> {
     const posts = await getPosts();
     const filtered = posts.filter(p => p.id !== id);
     await kv.set(POSTS_KEY, filtered);
+    // Note: We leave comments orphaned or could delete them here if we had a delete key method exposed
 }

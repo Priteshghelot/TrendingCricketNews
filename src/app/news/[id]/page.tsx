@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { getPostById, getApprovedPosts } from '@/lib/store';
 import AdSense from '@/components/AdSense';
 import ShareButtons from '@/components/ShareButtons';
+import Comments from '@/components/Comments';
 
 export const dynamic = 'force-dynamic';
 
@@ -141,6 +142,9 @@ export default async function NewsPage({ params }: { params: Promise<{ id: strin
                 <div className="ad-container">
                     <AdSense adSlot="5566778899" adFormat="auto" />
                 </div>
+
+                {/* Comments Section */}
+                <Comments postId={post.id} />
             </article>
         </>
     );
