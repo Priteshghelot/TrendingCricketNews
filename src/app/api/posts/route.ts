@@ -12,6 +12,12 @@ export async function GET() {
 // CREATE a new post
 export async function POST(request: Request) {
     try {
+        // Debug: Check if KV_URL is present
+        if (!process.env.KV_URL) {
+            console.error('CRITICAL: KV_URL is missing from environment variables');
+            return NextResponse.json({ error: 'Configuration Error: KV_URL is missing. Please connect Vercel KV.' }, { status: 500 });
+        }
+
         const { title, body, imageUrl, status } = await request.json();
 
         if (!title || !body) {
@@ -38,9 +44,12 @@ export async function POST(request: Request) {
         }
 
         return NextResponse.json({ success: true, post: newPost });
-    } catch (error) {
-        console.error('POST error:', error);
-        return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    } catch (error: any) {
+        console.error('POST error full details:', error);
+        return NextResponse.json({
+            error: `Database Error: ${error.message || 'Unknown error'}`,
+            details: error.stack
+        }, { status: 500 });
     }
 }
 
