@@ -80,6 +80,12 @@ export default function RootLayout({
                 <main>{children}</main>
                 <footer className="footer">
                     <div className="container">
+                        <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+                            <Link href="/about" style={{ color: '#aaa', fontSize: '0.9rem' }}>About Us</Link>
+                            <Link href="/contact" style={{ color: '#aaa', fontSize: '0.9rem' }}>Contact</Link>
+                            <Link href="/privacy-policy" style={{ color: '#aaa', fontSize: '0.9rem' }}>Privacy Policy</Link>
+                            <Link href="/terms" style={{ color: '#aaa', fontSize: '0.9rem' }}>Terms & Conditions</Link>
+                        </div>
                         <p>&copy; {new Date().getFullYear()} CricTrend. All rights reserved.</p>
                     </div>
                 </footer>
