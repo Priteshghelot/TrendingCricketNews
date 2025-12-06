@@ -14,8 +14,6 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const { id } = await params;
     const post = await getPostById(id);
 
-    const post = await getPostById(id);
-
     if (!post) {
         notFound();
     }
