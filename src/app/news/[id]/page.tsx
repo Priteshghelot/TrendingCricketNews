@@ -8,8 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const decodedId = decodeURIComponent(id);
-    const post = await getPostById(decodedId);
+    const post = await getPostById(id);
 
     if (!post) {
         return { title: 'Not Found' };
@@ -56,8 +55,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function NewsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const decodedId = decodeURIComponent(id);
-    const post = await getPostById(decodedId);
+    // getPostById now handles safe decoding
+    const post = await getPostById(id);
 
     if (!post) {
         notFound();

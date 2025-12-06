@@ -26,7 +26,12 @@ export default function Comments({ postId }: { postId: string }) {
             const res = await fetch(`/api/comments?postId=${postId}`);
             if (res.ok) {
                 const data = await res.json();
-                setComments(data);
+                if (Array.isArray(data)) {
+                    setComments(data);
+                } else {
+                    console.error('Comments API returned non-array:', data);
+                    setComments([]);
+                }
             }
         } catch (err) {
             console.error('Failed to fetch comments', err);
