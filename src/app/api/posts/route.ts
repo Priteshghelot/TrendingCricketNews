@@ -12,10 +12,10 @@ export async function GET() {
 // CREATE a new post
 export async function POST(request: Request) {
     try {
-        // Debug: Check if KV_URL is present
-        if (!process.env.KV_URL) {
-            console.error('CRITICAL: KV_URL is missing from environment variables');
-            return NextResponse.json({ error: 'Configuration Error: KV_URL is missing. Please connect Vercel KV.' }, { status: 500 });
+        // Debug: Check if database URL is present
+        if (!process.env.KV_URL && !process.env.REDIS_URL) {
+            console.error('CRITICAL: Neither KV_URL nor REDIS_URL is set');
+            return NextResponse.json({ error: 'Configuration Error: Database URL is missing. Add REDIS_URL to Environment Variables in Vercel Settings.' }, { status: 500 });
         }
 
         const { title, body, imageUrl, status } = await request.json();
