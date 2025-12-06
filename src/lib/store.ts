@@ -53,10 +53,27 @@ export async function getApprovedPosts(): Promise<Post[]> {
         .sort((a, b) => b.timestamp - a.timestamp);
 }
 
-// Get post by ID
+// Get post by ID (Robust lookup)
 export async function getPostById(id: string): Promise<Post | null> {
     const posts = await getPosts();
-    return posts.find(p => p.id === id) || null;
+    if (!id) return null;
+
+    const targetId = decodeURIComponent(id).trim();
+
+    // 1. Exact match (most common)
+    const exactMatch = posts.find(p => p.id === targetId);
+    if (exactMatch) return exactMatch;
+
+    // 2. Case-insensitive match
+    const caseInsensitiveMatch = posts.find(p => p.id.toLowerCase() === targetId.toLowerCase());
+    if (caseInsensitiveMatch) return caseInsensitiveMatch;
+
+    // 3. Fallback: Check if ID matches a Title (for old posts or human-readable URLs)
+    // "India vs Australia" -> match title "India vs Australia"
+    const titleMatch = posts.find(p => p.title.trim().toLowerCase() === targetId.toLowerCase());
+    if (titleMatch) return titleMatch;
+
+    return null;
 }
 
 // Add a new post
