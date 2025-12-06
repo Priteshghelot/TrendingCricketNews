@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getPostById, getApprovedPosts } from '@/lib/store';
 import AdSense from '@/components/AdSense';
+import ShareButtons from '@/components/ShareButtons';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,12 +18,35 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         return { title: 'Not Found' };
     }
 
+    const url = `https://crictrend.vercel.app/news/${post.id}`;
+    const description = post.body.substring(0, 160);
+
     return {
         title: post.title,
-        description: post.body.substring(0, 160),
+        description,
+        alternates: {
+            canonical: url,
+        },
         openGraph: {
+            type: 'article',
             title: post.title,
-            description: post.body.substring(0, 160),
+            description,
+            url,
+            siteName: 'CricTrend',
+            images: post.imageUrl ? [
+                {
+                    url: post.imageUrl,
+                    width: 1200,
+                    height: 630,
+                    alt: post.title,
+                }
+            ] : [],
+            publishedTime: new Date(post.timestamp).toISOString(),
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: post.title,
+            description,
             images: post.imageUrl ? [post.imageUrl] : [],
         },
     };
@@ -90,6 +114,12 @@ export default async function NewsPage({ params }: { params: Promise<{ id: strin
                 {post.imageUrl && (
                     <img src={post.imageUrl} alt={post.title} className="article-image" />
                 )}
+
+                {/* Share Buttons */}
+                <ShareButtons
+                    title={post.title}
+                    url={`https://crictrend.vercel.app/news/${post.id}`}
+                />
 
                 {/* Ad in article */}
                 <div className="ad-container">
