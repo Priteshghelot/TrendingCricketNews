@@ -47,6 +47,7 @@ export default async function NewsPage({ params }: { params: Promise<{ id: strin
                         month: 'long',
                         day: 'numeric',
                         year: 'numeric',
+                        timeZone: 'UTC'
                     })}
                 </p>
             </header>

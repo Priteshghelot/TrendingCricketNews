@@ -342,10 +342,92 @@ img {
     font-size: 0.9rem;
 }
 
+/* Article Styles */
+.article {
+    background: var(--bg-card);
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+}
+
+.article-header {
+    margin-bottom: 2rem;
+}
+
+.article-title {
+    font-size: 2.5rem;
+    font-weight: 900;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.article-meta {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.article-image {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+}
+
+.article-body {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text-primary);
+}
+
+.article-body p {
+    margin-bottom: 1.5rem;
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
+    .container {
+        padding: 0 0.75rem;
+    }
+
+    .header-inner {
+        height: 56px;
+    }
+
+    .logo {
+        font-size: 1.25rem;
+    }
+
+    .nav-links {
+        gap: 1rem;
+    }
+
+    .nav-link {
+        font-size: 0.8rem;
+    }
+
+    .btn-admin {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+    }
+
+    .live-score-bar {
+        padding: 0.4rem 0;
+    }
+
+    .score-card {
+        min-width: 240px;
+        padding: 0.6rem;
+    }
+
     .main-layout {
         grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 1rem 0;
     }
 
     .news-card-compact {
@@ -355,6 +437,74 @@ img {
 
     .news-card-image-compact {
         width: 100%;
-        height: 200px;
+        height: 180px;
+    }
+
+    .news-card-content-compact {
+        padding: 0.875rem;
+    }
+
+    .news-card-title-compact {
+        font-size: 1.05rem;
+    }
+
+    .sidebar {
+        gap: 1.5rem;
+    }
+
+    .sidebar-section {
+        padding: 0.875rem;
+    }
+
+    /* Article Mobile Styles */
+    .article {
+        margin: 1rem auto;
+        padding: 1.25rem;
+        border-radius: 0;
+    }
+
+    .article-title {
+        font-size: 1.75rem;
+        line-height: 1.3;
+        margin-bottom: 0.75rem;
+    }
+
+    .article-meta {
+        font-size: 0.85rem;
+        padding-bottom: 0.75rem;
+    }
+
+    .article-body {
+        font-size: 1rem;
+        line-height: 1.7;
+    }
+
+    .article-body p {
+        margin-bottom: 1.25rem;
+    }
+
+    .article-image {
+        margin: 1rem 0;
+        border-radius: 4px;
+    }
+
+    .ad-container {
+        padding: 0.75rem;
+        margin: 0.75rem 0;
+    }
+
+    .ad-container-sidebar {
+        min-height: 200px;
+    }
+
+    .footer {
+        padding: 2rem 0;
+        font-size: 0.85rem;
+    }
+
+    /* Fix "No Image" placeholder on mobile */
+    .news-card-compact div[style*="width: 240px"] {
+        width: 100% !important;
+        height: 180px !important;
     }
 }

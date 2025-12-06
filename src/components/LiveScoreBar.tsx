@@ -12,8 +12,11 @@ interface Match {
 
 export default function LiveScoreBar() {
     const [matches, setMatches] = useState<Match[]>([]);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
+
         // Fetch live scores
         const fetchScores = async () => {
             try {
@@ -32,6 +35,21 @@ export default function LiveScoreBar() {
 
         return () => clearInterval(interval);
     }, []);
+
+    // Prevent hydration mismatch by showing nothing during SSR
+    if (!mounted) {
+        return (
+            <div className="live-score-bar">
+                <div className="container">
+                    <div className="score-strip">
+                        <div className="score-card">
+                            <div className="match-status">Loading live scores...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     if (matches.length === 0) {
         return (

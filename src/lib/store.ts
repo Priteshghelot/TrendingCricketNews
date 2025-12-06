@@ -1,4 +1,23 @@
-import { kv } from '@vercel/kv';
+import Redis from 'ioredis';
+
+const redis = new Redis(process.env.KV_URL || '');
+
+// Wrapper to match kv interface
+const kv = {
+    async get<T>(key: string): Promise<T | null> {
+        const value = await redis.get(key);
+        if (!value) return null;
+        try {
+            return JSON.parse(value) as T;
+        } catch {
+            return value as T;
+        }
+    },
+    async set(key: string, value: any): Promise<void> {
+        const serialized = typeof value === 'string' ? value : JSON.stringify(value);
+        await redis.set(key, serialized);
+    },
+};
 
 export interface Post {
     id: string;
