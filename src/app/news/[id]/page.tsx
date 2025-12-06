@@ -36,41 +36,77 @@ export default async function NewsPage({ params }: { params: Promise<{ id: strin
         notFound();
     }
 
+    // Structured data for SEO
+    const structuredData = {
+        '@context': 'https://schema.org',
+        '@type': 'NewsArticle',
+        headline: post.title,
+        image: post.imageUrl || 'https://crictrend.vercel.app/default-cricket.jpg',
+        datePublished: new Date(post.timestamp).toISOString(),
+        dateModified: new Date(post.timestamp).toISOString(),
+        author: {
+            '@type': 'Organization',
+            name: 'CricTrend',
+            url: 'https://crictrend.vercel.app',
+        },
+        publisher: {
+            '@type': 'Organization',
+            name: 'CricTrend',
+            logo: {
+                '@type': 'ImageObject',
+                url: 'https://crictrend.vercel.app/logo.png',
+            },
+        },
+        description: post.body.substring(0, 160),
+        mainEntityOfPage: {
+            '@type': 'WebPage',
+            '@id': `https://crictrend.vercel.app/news/${post.id}`,
+        },
+    };
+
     return (
-        <article className="article">
-            <header className="article-header">
-                <h1 className="article-title">{post.title}</h1>
-                <p className="article-meta">
-                    Published on{' '}
-                    {new Date(post.timestamp).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric',
-                        timeZone: 'UTC'
-                    })}
-                </p>
-            </header>
+        <>
+            {/* Structured Data for SEO */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+            />
 
-            {post.imageUrl && (
-                <img src={post.imageUrl} alt={post.title} className="article-image" />
-            )}
+            <article className="article">
+                <header className="article-header">
+                    <h1 className="article-title">{post.title}</h1>
+                    <p className="article-meta">
+                        Published on{' '}
+                        {new Date(post.timestamp).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            month: 'long',
+                            day: 'numeric',
+                            year: 'numeric',
+                            timeZone: 'UTC'
+                        })}
+                    </p>
+                </header>
 
-            {/* Ad in article */}
-            <div className="ad-container">
-                <AdSense adSlot="1122334455" adFormat="rectangle" />
-            </div>
+                {post.imageUrl && (
+                    <img src={post.imageUrl} alt={post.title} className="article-image" />
+                )}
 
-            <div className="article-body">
-                {post.body.split('\n').map((paragraph, i) => (
-                    <p key={i}>{paragraph}</p>
-                ))}
-            </div>
+                {/* Ad in article */}
+                <div className="ad-container">
+                    <AdSense adSlot="1122334455" adFormat="rectangle" />
+                </div>
 
-            {/* Bottom Ad */}
-            <div className="ad-container">
-                <AdSense adSlot="5566778899" adFormat="auto" />
-            </div>
-        </article>
+                <div className="article-body">
+                    {post.body.split('\n').map((paragraph, i) => (
+                        <p key={i}>{paragraph}</p>
+                    ))}
+                </div>
+
+                {/* Bottom Ad */}
+                <div className="ad-container">
+                    <AdSense adSlot="5566778899" adFormat="auto" />
+                </div>
+            </article>
+        </>
     );
 }
