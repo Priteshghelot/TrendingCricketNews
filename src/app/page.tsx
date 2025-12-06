@@ -66,9 +66,7 @@ export default async function HomePage() {
                                             <h2 className="hero-title">
                                                 {posts[0].title}
                                             </h2>
-                                            <p className="hero-summary">
-                                                {posts[0].body}
-                                            </p>
+                                            {/* Summary removed as per user request */}
                                         </div>
                                     </Link>
                                 )}
