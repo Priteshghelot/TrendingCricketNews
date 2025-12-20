@@ -16,7 +16,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     }
 
     const url = `https://crictrend.vercel.app/news/${post.id}`;
-    const description = post.body.substring(0, 160);
+
+    // Clean description of markdown for social media
+    const cleanDescription = post.body
+        .replace(/[#*`]/g, '') // remove #, *, `
+        .replace(/\s+/g, ' ')  // normalize whitespace
+        .trim()
+        .substring(0, 160);
 
     // Ensure image URL is absolute for social media
     const imageUrl = post.imageUrl
@@ -25,14 +31,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
     return {
         title: post.title,
-        description,
+        description: cleanDescription,
         alternates: {
             canonical: url,
         },
         openGraph: {
             type: 'article',
             title: post.title,
-            description,
+            description: cleanDescription,
             url,
             siteName: 'CricTrend',
             images: [
@@ -48,7 +54,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         twitter: {
             card: 'summary_large_image',
             title: post.title,
-            description,
+            description: cleanDescription,
             images: [imageUrl],
         },
     };

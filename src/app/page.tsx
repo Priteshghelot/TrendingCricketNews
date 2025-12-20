@@ -112,7 +112,9 @@ export default async function HomePage() {
                                                     WebkitBoxOrient: 'vertical',
                                                     overflow: 'hidden'
                                                 }}>
-                                                    {post.body.substring(0, 120)}...
+                                                    {post.body
+                                                        .replace(/[#*`]/g, '')
+                                                        .substring(0, 120)}...
                                                 </p>
                                                 <div className="news-card-meta">
                                                     {new Date(post.timestamp).toLocaleDateString('en-US', {
