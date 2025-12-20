@@ -158,6 +158,22 @@ export default function AdminPage() {
                     </p>
                     <p style={{ color: '#666', fontSize: '0.9rem' }}>Published</p>
                 </div>
+                <div style={{
+                    background: '#fff8e1',
+                    padding: '1.5rem',
+                    borderRadius: '12px',
+                    border: '1px solid #ffecb3',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center'
+                }}>
+                    <h3 style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#f57f17' }}>💰 AdSense Readiness</h3>
+                    <ul style={{ fontSize: '0.8rem', color: '#5d4037', margin: 0, paddingLeft: '1.2rem' }}>
+                        <li>Min 600 words per post</li>
+                        <li>Unique, original content</li>
+                        <li>No clickbait/emergency emojis</li>
+                    </ul>
+                </div>
             </div>
 
             {/* Create Post Form */}
@@ -267,14 +283,32 @@ export default function AdminPage() {
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label">Article Content *</label>
+                        <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span>Article Content *</span>
+                            <span style={{
+                                fontSize: '0.8rem',
+                                color: body.trim().split(/\s+/).filter(Boolean).length < 600 ? '#f44336' : '#4caf50',
+                                fontWeight: 'bold'
+                            }}>
+                                {body.trim().split(/\s+/).filter(Boolean).length} / 600 words
+                                {body.trim().split(/\s+/).filter(Boolean).length < 600 ? ' (AdSense needs 600+)' : ' (Ready for AdSense!)'}
+                            </span>
+                        </label>
                         <textarea
                             className="form-textarea"
                             value={body}
                             onChange={(e) => setBody(e.target.value)}
                             placeholder="Write your cricket news article..."
-                            style={{ minHeight: '250px' }}
+                            style={{
+                                minHeight: '350px',
+                                border: body.trim().split(/\s+/).filter(Boolean).length < 600 && body.length > 0 ? '2px solid #ffccbc' : '1px solid #e5e5e5'
+                            }}
                         />
+                        {body.trim().split(/\s+/).filter(Boolean).length < 600 && body.length > 100 && (
+                            <p style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.5rem', fontStyle: 'italic' }}>
+                                💡 Tip: Try adding more context, player stats, or match history to reach 600 words for better AdSense approval chance.
+                            </p>
+                        )}
                     </div>
 
                     <button

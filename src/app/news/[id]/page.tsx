@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import { getPostById, getApprovedPosts } from '@/lib/store';
 import AdSense from '@/components/AdSense';
 import ShareButtons from '@/components/ShareButtons';
@@ -99,18 +100,30 @@ export default async function NewsPage({ params }: { params: Promise<{ id: strin
             />
 
             <article className="article">
+                {/* Breadcrumbs */}
+                <nav style={{ fontSize: '0.85rem', color: '#666', marginBottom: '1rem' }}>
+                    <Link href="/" style={{ color: 'var(--primary-blue)' }}>Home</Link>
+                    <span style={{ margin: '0 0.5rem' }}>&rsaquo;</span>
+                    <Link href="/" style={{ color: 'var(--primary-blue)' }}>News</Link>
+                    <span style={{ margin: '0 0.5rem' }}>&rsaquo;</span>
+                    <span style={{ color: '#999' }}>{post.title.substring(0, 30)}...</span>
+                </nav>
+
                 <header className="article-header">
                     <h1 className="article-title">{post.title}</h1>
-                    <p className="article-meta">
-                        Published on{' '}
-                        {new Date(post.timestamp).toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            month: 'long',
-                            day: 'numeric',
-                            year: 'numeric',
-                            timeZone: 'UTC'
-                        })}
-                    </p>
+                    <div className="article-meta" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <span>
+                            {new Date(post.timestamp).toLocaleDateString('en-US', {
+                                weekday: 'long',
+                                month: 'long',
+                                day: 'numeric',
+                                year: 'numeric',
+                                timeZone: 'UTC'
+                            })}
+                        </span>
+                        <span style={{ color: '#ccc' }}>|</span>
+                        <span>{Math.max(1, Math.ceil(post.body.split(/\s+/).length / 200))} min read</span>
+                    </div>
                 </header>
 
                 {post.imageUrl && (
@@ -132,6 +145,37 @@ export default async function NewsPage({ params }: { params: Promise<{ id: strin
                     {post.body.split('\n').map((paragraph, i) => (
                         <p key={i}>{paragraph}</p>
                     ))}
+                </div>
+
+                {/* Author Signature */}
+                <div style={{
+                    marginTop: '3rem',
+                    padding: '1.5rem',
+                    backgroundColor: '#f9f9f9',
+                    borderRadius: '8px',
+                    borderLeft: '4px solid var(--primary-blue)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem'
+                }}>
+                    <div style={{
+                        width: '50px',
+                        height: '50px',
+                        borderRadius: '50%',
+                        backgroundColor: 'var(--primary-blue)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 'bold',
+                        fontSize: '1.2rem'
+                    }}>
+                        CT
+                    </div>
+                    <div>
+                        <p style={{ margin: 0, fontWeight: 'bold', fontSize: '1rem' }}>CricTrend Editorial Team</p>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#666' }}>Providing real-time cricket updates and expert analysis since 2024.</p>
+                    </div>
                 </div>
 
                 {/* Bottom Ad */}

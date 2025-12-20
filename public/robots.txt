@@ -1,7 +1,0 @@
-User-Agent: *
-Allow: /
-Disallow: /admin/
-
-Sitemap: https://crictrend.vercel.app/sitemap.xml
-
-# Last updated: 2025-11-20

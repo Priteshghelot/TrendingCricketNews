@@ -83,6 +83,7 @@ export default function RootLayout({
                         <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
                             <Link href="/about" style={{ color: '#aaa', fontSize: '0.9rem' }}>About Us</Link>
                             <Link href="/contact" style={{ color: '#aaa', fontSize: '0.9rem' }}>Contact</Link>
+                            <Link href="/editorial-policy" style={{ color: '#aaa', fontSize: '0.9rem' }}>Editorial Policy</Link>
                             <Link href="/privacy-policy" style={{ color: '#aaa', fontSize: '0.9rem' }}>Privacy Policy</Link>
                             <Link href="/terms" style={{ color: '#aaa', fontSize: '0.9rem' }}>Terms & Conditions</Link>
                         </div>
