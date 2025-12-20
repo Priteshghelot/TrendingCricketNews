@@ -62,6 +62,28 @@ export default function RootLayout({
             `,
                     }}
                 />
+                {/* Organization Structured Data */}
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{
+                        __html: JSON.stringify({
+                            '@context': 'https://schema.org',
+                            '@type': 'Organization',
+                            name: 'CricTrend',
+                            url: 'https://crictrend.vercel.app',
+                            logo: 'https://crictrend.vercel.app/logo.png',
+                            sameAs: [
+                                'https://twitter.com/crictrend',
+                                'https://facebook.com/crictrend'
+                            ],
+                            contactPoint: {
+                                '@type': 'ContactPoint',
+                                email: 'support@crictrend.com',
+                                contactType: 'customer service'
+                            }
+                        })
+                    }}
+                />
             </head>
             <body className={roboto.className}>
                 <header className="header">
