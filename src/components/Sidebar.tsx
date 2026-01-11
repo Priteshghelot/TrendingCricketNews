@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import AdSense from './AdSense';
 import { getApprovedPosts } from '@/lib/store';
+import SidebarLiveWidget from './SidebarLiveWidget';
 
 export default async function Sidebar() {
     const posts = await getApprovedPosts();
@@ -9,6 +10,9 @@ export default async function Sidebar() {
 
     return (
         <aside className="sidebar">
+            {/* Live Scores Widget */}
+            <SidebarLiveWidget />
+
             {/* Trending Headlines */}
             <div className="sidebar-section">
                 <h3 className="sidebar-title">Trending Headlines</h3>

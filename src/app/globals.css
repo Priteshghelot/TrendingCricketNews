@@ -2,8 +2,6 @@
    CricTrend - ESPNcricinfo Style Theme
    ======================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
-
 :root {
     /* India Cricket Jersey Palette */
     --primary-blue: #1565C0;
@@ -37,7 +35,6 @@
 }
 
 body {
-    font-family: 'Roboto', sans-serif;
     background: var(--bg-secondary);
     color: var(--text-primary);
     line-height: 1.5;
