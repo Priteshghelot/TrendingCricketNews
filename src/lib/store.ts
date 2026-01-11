@@ -3,7 +3,7 @@ import Redis from 'ioredis';
 const redis = new Redis(process.env.KV_URL || process.env.REDIS_URL || '');
 
 // Wrapper to match kv interface
-const kv = {
+export const kv = {
     async get<T>(key: string): Promise<T | null> {
         const value = await redis.get(key);
         if (!value) return null;

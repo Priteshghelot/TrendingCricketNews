@@ -39,7 +39,13 @@ export async function GET(request: Request) {
         }
 
         // 2. Prepare "Daily Round-Up"
-        const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const today = new Date().toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            timeZone: 'Asia/Kolkata' // Ensure consistency with user's timezone
+        });
         const postTitle = `Cricket Daily Round-Up: ${today}`;
 
         // Fetch existing posts
